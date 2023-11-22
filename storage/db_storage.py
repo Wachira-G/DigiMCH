@@ -10,6 +10,7 @@ class DbStorage:
 
     def all(self, cls=None) -> list:
         """Return all objects of a given class."""
+        return self.db.session.query(cls).all()
 
     def new(self, obj):
         """Add a new object to the database."""
