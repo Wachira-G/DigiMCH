@@ -1,9 +1,7 @@
 
 from api.v1.views import api_bp
 from models.patient import Patient
-from storage.db_storage import DbStorage
 from flask import jsonify, request, abort, current_app
-from sqlalchemy.orm import Session, sessionmaker, scoped_session
 
 storage = current_app.config['storage']
 
@@ -28,7 +26,7 @@ def create_patient():
     # if 'location_id' not in patient:
 
     patient_obj = Patient(**patient)
-    print(patient_obj)
+
     storage.new(patient_obj)
     storage.save()
     return jsonify(patient_obj.to_dict()), 201
