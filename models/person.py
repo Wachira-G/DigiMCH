@@ -1,32 +1,34 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from flask import current_app
 from app import db
+from itsdangerous import BadSignature, SignatureExpired, Serializer
+import hashlib
+from models.role import person_role
 
-Base = declarative_base()
 storage = db
 time = "%Y-%m-%dT%H:%M:%S.%f"
 
-
-class Person():
+class Person(db.Model):
     """Define a basic person."""
-    id = Column(String(60), primary_key=True)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, nullable=False)
 
-    first_name = Column(String(128), nullable=True)
-    surname = Column(String(128), nullable=True)
-    middle_name = Column(String(128), nullable=True)
-    phone_no = Column(String(128), nullable=True)
-    location_id = Column(String(128), nullable=True)
-    sex = Column(String(128), nullable=True)
-    birth_date = Column(DateTime, nullable=True)
-    username = Column(String(128), nullable=True)
-    password_hash = Column(String(128), nullable=True)
-    # role_id = ""
+    __tablename__ = "persons"
 
+    id = db.Column(db.String(60), primary_key=True)
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime, nullable=False)
+
+    first_name = db.Column(db.String(128), nullable=False)
+    surname = db.Column(db.String(128), nullable=True)
+    middle_name = db.Column(db.String(128), nullable=True)
+    phone_no = db.Column(db.String(128), nullable=False)
+    location_id = db.Column(db.String(128), nullable=True)
+    sex = db.Column(db.String(128), nullable=False)
+    birth_date = db.Column(db.DateTime, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=True)
+
+    roles = db.relationship("Role", secondary=person_role, back_populates="persons")
 
     def __init__(self, *args, **kwargs):
         """Initialize a basic person."""
@@ -66,16 +68,6 @@ class Person():
             if "password" in new_dict:
                 del new_dict["password"]
         return new_dict
-    
-    def save(self):
-        """Save a person to the database."""
-        storage.new(self)
-        storage.save()
-
-    def delete(self):
-        """Delete a person from the database."""
-        storage.delete(self)
-        storage.save()
 
     def update(self, **kwargs):
         """Update a person."""
