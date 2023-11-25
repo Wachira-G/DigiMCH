@@ -42,6 +42,8 @@ class Person(db.Model):
                               value, "%Y-%m-%dT%H:%M:%S.%f"),
                             )
                 else:
+                    if 'passowrd' in key:
+                        setattr(self, 'password_hash', self.generate_hash(value))
                     if key != "__class__":
                         setattr(self, key, value)
 
@@ -67,6 +69,8 @@ class Person(db.Model):
         if save_fs is None:
             if "password" in new_dict:
                 del new_dict["password"]
+        if self.roles:
+            new_dict["roles"] = [role.to_dict() for role in self.roles]
         return new_dict
 
     def update(self, **kwargs):
@@ -76,3 +80,34 @@ class Person(db.Model):
                 setattr(self, key, value)
         self.updated_at = datetime.now()
         storage.save()
+
+
+    def generate_auth_token(self, expiration=600):
+        """Generate the auth token."""
+        s = Serializer(current_app.config["SECRET_KEY"])
+        return s.dumps({"id": self.id})
+
+
+    @staticmethod
+    def verify_auth_token(token, model):
+        """Verify the auth token."""
+        s = Serializer(current_app.config["SECRET_KEY"])
+        try:
+            data = s.loads(token)
+        except (BadSignature, SignatureExpired):
+            return None
+        instance = model.query.get(data['id'])
+        return instance
+    
+    @staticmethod
+    def generate_hash(password):
+        """Generate a password hash."""
+        return hashlib.md5(password.encode()).hexdigest()
+    
+    def check_password(self, password):
+        """Check if a password matches the hash."""
+        return self.password_hash == self.generate_hash(password)
+    
+    def set_password(self, password):
+        """Set a password."""
+        self.password_hash = self.generate_hash(password)

@@ -4,6 +4,22 @@
 from api.v1.views import api_bp
 from flask import jsonify
 
+
+def register_error_handlers(app):
+    """Register error handlers."""
+    app.register_error_handler(400, bad_request)
+    app.register_error_handler(404, not_found)
+    app.register_error_handler(401, unauthorized)
+    app.register_error_handler(403, forbidden)
+    app.register_error_handler(405, method_not_allowed)
+    app.register_error_handler(409, conflict)
+    app.register_error_handler(429, too_many_requests)
+    app.register_error_handler(500, internal_server_error)
+    app.register_error_handler(503, service_unavailable)
+    app.register_error_handler(504, gateway_timeout)
+    app.register_error_handler(501, not_implemented)
+
+
 #----- client side errors -----#
 
 # add error handler for 400
@@ -12,8 +28,6 @@ def bad_request(error):
     """ Error handler for 400 """
     return jsonify({"error": error.description}), 400
 
-# add error handler for 404
-@api_bp.errorhandler(404)
 # add error handler for 404
 @api_bp.errorhandler(404)
 def not_found(error):
