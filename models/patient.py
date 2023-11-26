@@ -1,26 +1,23 @@
 """Define the patient module."""
 
-import uuid
-import datetime
-from models.person import Person, Base
-from storage.db_storage import DbStorage as storage
-from sqlalchemy import Column, String, ForeignKey
-from sqlalchemy.orm import relationship
 from app import db
+from models.person import Person
 
 
-class Patient(Person, db.Model, Base):
+class Patient(Person):
     """patient class."""
-    __tablename__ = 'patients'
-    role_id = Column(String(128) )#, ForeignKey('roles.id'))
-    wcw_no = Column(String(128), nullable=True)
-    patient_no = Column(String(128), nullable=True)
-    sys_gen_uniq_no = Column(String(128), nullable=True)
-    #patient_type = Column(String(128), nullable=True)
-    alt_phone_no = Column(String(128), nullable=True)
-    marital_status = Column(String(128), nullable=True)
-    telephone = Column(String(128), nullable=True)
-    education_level = Column(String(128), nullable=True)
-    next_of_kin = Column(String(128), nullable=True)
-    next_of_kin_relationship = Column(String(128), nullable=True)
-    next_of_kin_contacts = Column(String(128), nullable=True)
+
+    __tablename__ = "patients"
+
+    id = db.Column(db.String(60), db.ForeignKey("persons.id"), primary_key=True)
+
+    wcw_no = db.Column(db.String(128), nullable=True)
+    # patient_no = db.Column(db.String(128), nullable=True)
+    sys_gen_uniq_no = db.Column(db.String(128), nullable=True)
+    alt_phone_no = db.Column(db.String(128), nullable=True)
+    marital_status = db.Column(db.String(128), nullable=True)
+    telephone = db.Column(db.String(128), nullable=True)
+    education_level = db.Column(db.String(128), nullable=True)
+    next_of_kin = db.Column(db.String(128), nullable=True)
+    next_of_kin_relationship = db.Column(db.String(128), nullable=True)
+    next_of_kin_contacts = db.Column(db.String(128), nullable=True)

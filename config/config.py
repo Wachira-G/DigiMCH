@@ -1,14 +1,15 @@
 import os
 
-basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 
 class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DATABASE_URL',
-        'sqlite:///' + os.path.join(basedir, 'tmp', 'development.db'))
+        "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
+    )
     SQLALCHEMY_T = False
     JSONIFY_PRETTYPRRACK_MODIFICATIONSINT_REGULAR = True
-    SECRET_KEY = '0WJ090JWJWTG0'
+    SECRET_KEY = "0WJ090JWJWTG0"
 
 
 """

@@ -14,6 +14,7 @@ def authenticate():
     else:
         return jsonify({"message": "Invalid credentials."}), 401
 
+
 @api_bp.route("/login", methods=["POST"], strict_slashes=False)
 def login():
     """Login a person."""

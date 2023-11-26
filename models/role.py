@@ -1,4 +1,3 @@
-
 """Module for Role model."""
 
 import uuid
@@ -29,10 +28,7 @@ class Role(db.Model):
 
     def __repr__(self):
         return f"<Role {self.name}>"
-    
+
     def to_dict(self):
         """Return a dictionary representation of a Role object."""
-        return {
-            "id": self.id,
-            "name": self.name,
-        }
+        return {"id": self.id, "name": self.name}

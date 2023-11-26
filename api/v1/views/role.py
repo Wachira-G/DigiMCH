@@ -1,4 +1,3 @@
-
 """Role related endpoints."""
 
 from flask import jsonify, request, abort
@@ -13,6 +12,7 @@ def get_roles():
     roles = Role.query.all()
     return jsonify([role.to_dict() for role in roles]), 200
 
+
 @api_bp.route("/roles", methods=["POST"], strict_slashes=False)
 def create_role():
     """Create a role."""
@@ -21,6 +21,7 @@ def create_role():
     db.session.add(role)
     db.session.commit()
     return jsonify(role.to_dict()), 201
+
 
 @api_bp.route("/roles/<role_id>", methods=["PUT"], strict_slashes=False)
 def update_role(role_id):
@@ -34,6 +35,7 @@ def update_role(role_id):
     else:
         abort(404)
 
+
 @api_bp.route("/roles/<role_id>", methods=["DELETE"], strict_slashes=False)
 def delete_role(role_id):
     """Delete a role."""
@@ -45,6 +47,7 @@ def delete_role(role_id):
     else:
         abort(404)
 
+
 @api_bp.route("/roles/<role_id>", methods=["GET"], strict_slashes=False)
 def get_role(role_id):
     """Get a role by id."""
@@ -53,6 +56,7 @@ def get_role(role_id):
         return jsonify(role.to_dict()), 200
     else:
         return abort(404)
+
 
 @api_bp.route("/roles/name/<name>", methods=["GET"], strict_slashes=False)
 def get_role_by_name(name):

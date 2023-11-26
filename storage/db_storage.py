@@ -1,5 +1,5 @@
-
 from flask_sqlalchemy import SQLAlchemy
+
 """Database storage engine module."""
 
 
@@ -9,6 +9,7 @@ class DbStorage:
     Attributes:
         db (SQLAlchemy): The SQLAlchemy instance.
     """
+
     db = None
 
     def __init__(self, db: SQLAlchemy):

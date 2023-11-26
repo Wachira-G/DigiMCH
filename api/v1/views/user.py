@@ -1,43 +1,47 @@
-
 """User related endpoints."""
-from flask import jsonify, request
-from models.user import User
-from models.role import Role
-from models.person import Person
+
+from flask import jsonify, request, abort
+from functools import wraps
 from app import db
 from api.v1.views import api_bp
-from functools import wraps
+from models.person import Person
+from models.role import Role
+from models.user import User
 
-
-from flask import abort
-from functools import wraps
 
 admin_role = Role.query.filter_by(name="admin").first()
 provider_role = Role.query.filter_by(name="provider").first()
+patient_role = Role.query.filter_by(name="patient").first()
+
 
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Get the auth token
-        token = request.headers.get('Authorization')
+        token = request.headers.get("Authorization")
         if not token:
-            return jsonify(
-                {'message': 'Token is missing'}
-            ), 401
+            return jsonify({"message": "Token is missing"}), 401
         # Get the current user
         current_user = Person.verify_auth_token(token, User)
         if current_user is None:
-            return jsonify(
-                {'message': 'Authentication is required to access this resource'}
-                ), 401
+            return (
+                jsonify(
+                    {"message": "Authentication is required to access this resource"}
+                ),
+                401,
+            )
 
         # Check if the current user has the 'admin' role
-        if 'admin' not in (role.name for role in current_user.roles):
-            return jsonify(
-                {'message': 'Admin privileges are required to access this resource'}
-                ), 403
+        if "admin" not in (role.name for role in current_user.roles):
+            return (
+                jsonify(
+                    {"message": "Admin privileges are required to access this resource"}
+                ),
+                403,
+            )
 
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -59,17 +63,24 @@ def create_user():
     user = User(**data)
     if not user:
         abort(400)
+    # single and multi-role support
     if "role" in data.keys():
         if data["role"] == "provider":
             user.roles.append(provider_role)
         elif data["role"] == "admin":
             user.roles.append(admin_role)
+    if "roles" in data.keys():
+        for role in data["roles"]:
+            if role == "provider":
+                user.roles.append(provider_role)
+            elif role == "admin":
+                user.roles.append(admin_role)
     db.session.add(user)
     db.session.commit()
     return jsonify(user.to_dict()), 201
 
 
-# update a user 
+# update a user
 # TODO what happens if current user wants to update self, and is not admin?
 @api_bp.route("/users/<string:user_id>", methods=["PUT"], strict_slashes=False)
 @admin_required
@@ -95,6 +106,7 @@ def delete_user(user_id):
     db.session.commit()
     return jsonify({}), 204
 
+
 # get a user by id
 @api_bp.route("/users/<string:user_id>", methods=["GET"], strict_slashes=False)
 @admin_required
@@ -107,7 +119,9 @@ def get_user(user_id):
 
 
 # get a user by phone_no
-@api_bp.route("/users/phone_no/<string:phone_no>", methods=["GET"], strict_slashes=False)
+@api_bp.route(
+    "/users/phone_no/<string:phone_no>", methods=["GET"], strict_slashes=False
+)
 @admin_required
 def get_user_by_phone_no(phone_no):
     """Return a user."""

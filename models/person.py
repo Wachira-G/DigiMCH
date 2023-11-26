@@ -1,4 +1,3 @@
-
 import uuid
 from datetime import datetime
 from flask import current_app
@@ -9,6 +8,7 @@ from models.role import person_role
 
 storage = db
 time = "%Y-%m-%dT%H:%M:%S.%f"
+
 
 class Person(db.Model):
     """Define a basic person."""
@@ -35,15 +35,10 @@ class Person(db.Model):
         if kwargs:
             for key, value in kwargs.items():
                 if key in ["updated_at", "created_at", "birth_date"]:
-                    setattr(
-                            self,
-                            key,
-                            datetime.strptime(
-                              value, "%Y-%m-%dT%H:%M:%S.%f"),
-                            )
+                    setattr(self, key, datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
                 else:
-                    if 'passowrd' in key:
-                        setattr(self, 'password_hash', self.generate_hash(value))
+                    if "password" in key:
+                        setattr(self, "password_hash", self.generate_hash(value))
                     if key != "__class__":
                         setattr(self, key, value)
 
@@ -81,12 +76,10 @@ class Person(db.Model):
         self.updated_at = datetime.now()
         storage.save()
 
-
     def generate_auth_token(self, expiration=600):
         """Generate the auth token."""
         s = Serializer(current_app.config["SECRET_KEY"])
         return s.dumps({"id": self.id})
-
 
     @staticmethod
     def verify_auth_token(token, model):
@@ -96,18 +89,18 @@ class Person(db.Model):
             data = s.loads(token)
         except (BadSignature, SignatureExpired):
             return None
-        instance = model.query.get(data['id'])
+        instance = model.query.get(data["id"])
         return instance
-    
+
     @staticmethod
     def generate_hash(password):
         """Generate a password hash."""
         return hashlib.md5(password.encode()).hexdigest()
-    
+
     def check_password(self, password):
         """Check if a password matches the hash."""
         return self.password_hash == self.generate_hash(password)
-    
+
     def set_password(self, password):
         """Set a password."""
         self.password_hash = self.generate_hash(password)
