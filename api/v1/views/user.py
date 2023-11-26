@@ -18,15 +18,24 @@ provider_role = Role.query.filter_by(name="provider").first()
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Get the current user
+        # Get the auth token
         token = request.headers.get('Authorization')
+        if not token:
+            return jsonify(
+                {'message': 'Token is missing'}
+            ), 401
+        # Get the current user
         current_user = Person.verify_auth_token(token, User)
         if current_user is None:
-            abort(401)  # Unauthorized
+            return jsonify(
+                {'message': 'Authentication is required to access this resource'}
+                ), 401
 
         # Check if the current user has the 'admin' role
         if 'admin' not in (role.name for role in current_user.roles):
-            abort(403)  # Forbidden
+            return jsonify(
+                {'message': 'Admin privileges are required to access this resource'}
+                ), 403
 
         return f(*args, **kwargs)
     return decorated_function
