@@ -12,3 +12,11 @@ class User(Person):
     id = db.Column(db.String(60), db.ForeignKey("persons.id"), primary_key=True)
     facility_id = db.Column(db.String(128), nullable=False)
     kmpdu_no = db.Column(db.String(128), nullable=True)
+
+    # __mapper_args__ = {
+    #     'polymorphic_identity':'user',
+    #}
+
+    #def __init__(self, *args, **kwargs):
+    #    super().__init__(*args, **kwargs)
+    #    self.type = 'user'

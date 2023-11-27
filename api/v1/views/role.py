@@ -17,8 +17,12 @@ def get_roles():
 def create_role():
     """Create a role."""
     data = request.get_json()
-    role = Role(name=data["name"])
-    db.session.add(role)
+    if not data:
+        abort(400, "Invalid data")
+    role = Role.query.filter_by(name=data["name"].lower()).first()
+    if role is None:
+        role = Role(name=data["name"].lower())
+        db.session.add(role)
     db.session.commit()
     return jsonify(role.to_dict()), 201
 

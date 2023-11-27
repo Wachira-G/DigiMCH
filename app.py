@@ -75,19 +75,20 @@ def create_admin(db, User, Role, Person):
     """Create an admin user."""
 
     # create roles
-
+    # admin
     try:
         admin_role = Role.query.filter_by(name="admin").first()
         if admin_role:
             pass
         else:
-            admin_role = Role(name="admin")
+            admin_role = Role(name="admin", description="root Administrator")
             db.session.add(admin_role)
             db.session.commit()
     except Exception as e:
         print(f"Failed to create admin role: {e}")
         return None
 
+    # provider
     try:
         provider_role = Role.query.filter_by(name="provider").first()
         if provider_role:
@@ -100,6 +101,7 @@ def create_admin(db, User, Role, Person):
         print(f"Failed to create provider role: {e}")
         return None
 
+    # patient
     try:
         patient_role = Role.query.filter_by(name="patient").first()
         if patient_role:

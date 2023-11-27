@@ -7,6 +7,7 @@ from api.v1.views import api_bp
 from models.person import Person
 from models.role import Role
 from models.user import User
+from api.v1.views.role import create_role
 
 
 admin_role = Role.query.filter_by(name="admin").first()
@@ -44,6 +45,12 @@ def admin_required(f):
 
     return decorated_function
 
+def create_role(name):
+    role = Role.query.filter_by(name=name).first()
+    if role is None:
+        role = Role(name=name.lower())
+        db.session.add(role)
+    return role
 
 # get all users
 @api_bp.route("/users", methods=["GET"], strict_slashes=False)
@@ -60,25 +67,27 @@ def get_users():
 def create_user():
     """Create a user."""
     data = request.get_json()
+    if not data:
+        abort(400, 'Invalid data')
+
+    roles = []
+    if "role" in data:
+        roles.append(create_role(data["role"]))
+        del data["role"]
+
+    if "roles" in data:
+        for role_name in data["roles"]:
+            roles.append(create_role(role_name))
+        del data["roles"]
+
     user = User(**data)
     if not user:
-        abort(400)
-    # single and multi-role support
-    if "role" in data.keys():
-        if data["role"] == "provider":
-            user.roles.append(provider_role)
-        elif data["role"] == "admin":
-            user.roles.append(admin_role)
-    if "roles" in data.keys():
-        for role in data["roles"]:
-            if role == "provider":
-                user.roles.append(provider_role)
-            elif role == "admin":
-                user.roles.append(admin_role)
+        abort(400, 'Failed to create user')
+    user.roles.extend(roles)
+
     db.session.add(user)
     db.session.commit()
     return jsonify(user.to_dict()), 201
-
 
 # update a user
 # TODO what happens if current user wants to update self, and is not admin?
@@ -87,9 +96,34 @@ def create_user():
 def update_user(user_id):
     """Update a user."""
     data = request.get_json()
+    if not data:
+        abort(400, 'Invalid data')
+
     user = User.query.get(user_id)
     if not user:
         abort(404)
+
+    if "role" in data:
+        role = user.get_role(data["role"].lower())
+        if role is None:
+            role = create_role(data["role"].lower())
+        user.assign_role(role)
+        del data["role"]
+
+    if "roles" in data:
+        for role in data["roles"]:
+            role = user.get_role(role)
+            if role is None:
+                role = create_role(role)
+            user.assign_role(role)
+        del data["roles"]
+
+    if "remove_role" in data:
+        role = Role.query.filter_by(name=data["remove_role"].lower()).first()
+        if role:
+            user.remove_role(role)
+        del data["remove_role"]
+
     user.update(**data)
     return jsonify(user.to_dict()), 200
 

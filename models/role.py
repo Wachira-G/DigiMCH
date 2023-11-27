@@ -1,13 +1,11 @@
 """Module for Role model."""
 
-import uuid
 from app import db
-
 
 person_role = db.Table(
     "person_role",
-    db.Column("person_id", db.String(60), db.ForeignKey("persons.id")),
-    db.Column("role_id", db.String(60), db.ForeignKey("roles.id")),
+    db.Column("person_id", db.Integer, db.ForeignKey("persons.id")),
+    db.Column("role_id", db.Integer, db.ForeignKey("roles.id")),
 )
 
 
@@ -16,19 +14,21 @@ class Role(db.Model):
 
     __tablename__ = "roles"
 
-    id = db.Column(db.String(60), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(128), nullable=False)
+    role_description = db.Column(db.String(128), nullable=True)
 
-    persons = db.relationship("Person", secondary=person_role, back_populates="roles")
+    # person_id = db.Column(db.Integer, db.ForeignKey("persons.id"))
+    person = db.relationship("Person", secondary=person_role, back_populates="roles")
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, role_description: str=None, *args, **kwargs):
         """Initialize a Role object."""
         self.name = name
-        self.id = str(uuid.uuid4())
+        self.role_description = role_description
 
     def __repr__(self):
         return f"<Role {self.name}>"
 
     def to_dict(self):
         """Return a dictionary representation of a Role object."""
-        return {"id": self.id, "name": self.name}
+        return {"id": self.id, "name": self.name, "role_description": self.role_description}
