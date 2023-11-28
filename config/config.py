@@ -12,6 +12,10 @@ class Config(object):
     SECRET_KEY = "0WJ090JWJWTG0"
 
 
+class TestConfig(Config):
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # use in-memory SQLite for testing
+
+
 """
 # Define different configurations
 class Config:

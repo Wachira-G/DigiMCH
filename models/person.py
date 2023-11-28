@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import func
 from app import db
 
-from models.role import person_role
+from models.role import person_role, Role
 
 storage = db
 time = "%Y-%m-%dT%H:%M:%S.%f"
@@ -117,6 +117,8 @@ class Person(db.Model):
 
     def generate_auth_token(self, expiration=60*60*24):
         """Generate the auth token."""
+        if self.id is None:
+            raise ValueError("Cannot generate token: Person instance has no id")
         s = Serializer(current_app.config["SECRET_KEY"])
         return s.dumps({"id": self.id}) # simplify token generation TODO: add expiration
 
@@ -128,7 +130,7 @@ class Person(db.Model):
             data = s.loads(token, max_age=60*60*24)
         except (BadSignature, SignatureExpired):
             return None
-        instance = model.query.get(data["id"])
+        instance = db.session.get(model, data["id"])
         return instance
 
     @staticmethod

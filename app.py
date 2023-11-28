@@ -4,13 +4,13 @@
 from venv import create
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config.config import Config
+from config.config import Config, TestConfig
 from typing import Optional
 
 db = SQLAlchemy()
 
 
-def create_app(config_name: Optional[str] = "development"):
+def create_app(config_name: Optional[str] = "development", testing: bool = False):
     """Create an app instance.
     
     :param config_name: The name of the configuration to use.
@@ -20,7 +20,10 @@ def create_app(config_name: Optional[str] = "development"):
     """
 
     app = Flask(__name__)
-    app.config.from_object(Config)
+    if testing:
+        app.config.from_object(TestConfig)
+    else:
+        app.config.from_object(Config)
 
     try:
         db.init_app(app)
