@@ -1,11 +1,19 @@
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 
 class Config(object):
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'tmp', 'development.db'))
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
+    )
     SQLALCHEMY_T = False
     JSONIFY_PRETTYPRRACK_MODIFICATIONSINT_REGULAR = True
+    SECRET_KEY = "0WJ090JWJWTG0"
+
+
+class TestConfig(Config):
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # use in-memory SQLite for testing
 
 
 """

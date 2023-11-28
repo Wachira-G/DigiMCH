@@ -8,3 +8,6 @@ venv/
 
 # visual studio code files
 .vscode
+
+# temporary files such as db
+tmp/
