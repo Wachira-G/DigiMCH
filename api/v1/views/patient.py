@@ -119,6 +119,7 @@ def get_patient_by_phone_no(current_user, phone_no):
     return jsonify(patient.to_dict()), 200
 
 
+# THIS ENDPOINT DOES NOT MAKE SENSE
 # endpoint to get a single patient by phone_no by patient if logged in user is patient and phone_no matches logged in user's phone_no
 @api_bp.route("/patients/me", methods=["GET"], strict_slashes=False)
 @token_required(Patient)

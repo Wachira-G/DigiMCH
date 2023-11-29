@@ -4,13 +4,13 @@
 from venv import create
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config.config import Config, TestConfig
-from typing import Optional
+import os
+import config.config as config
 
 db = SQLAlchemy()
 
 
-def create_app(config_name: Optional[str] = "development", testing: bool = False):
+def create_app():
     """Create an app instance.
     
     :param config_name: The name of the configuration to use.
@@ -20,10 +20,11 @@ def create_app(config_name: Optional[str] = "development", testing: bool = False
     """
 
     app = Flask(__name__)
-    if testing:
-        app.config.from_object(TestConfig)
-    else:
-        app.config.from_object(Config)
+
+    # set environment
+    env = os.environ.get("FLASK_ENV", "default")
+    config_class = config.configurations.get(env, config.configurations["default"])
+    app.config.from_object(config_class)
 
     try:
         db.init_app(app)
@@ -37,6 +38,9 @@ def create_app(config_name: Optional[str] = "development", testing: bool = False
             from models.user import User
             from models.role import Role
             from models.patient import Patient
+            from models.visit import Visit
+            from models.encounter import Encounter
+            from models.appointment import Appointment
 
             db.create_all()
         except Exception as e:
@@ -143,4 +147,4 @@ def create_admin(db, User, Role, Person):
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run()

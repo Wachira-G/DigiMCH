@@ -1,40 +1,54 @@
 import os
+# from dot-env import load_dotenv
+
+# load_dotenv()
 
 basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
+posgres_username = os.environ.get("POSTGRES_USERNAME")
+posgres_password = os.environ.get("POSTGRES_PASSWORD")
+posgres_database = os.environ.get("POSTGRES_DATABASE")
+posgres_host = os.environ.get("POSTGRES_HOST")
+posgres_port = os.environ.get("POSTGRES_PORT")
+
+postgresdb_config = f"postgresql://{posgres_username}:{posgres_password}@{posgres_host}:{posgres_port}/{posgres_database}"
+
 
 class Config(object):
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
-    )
+    DEBUG = False
+    TESTING = False
+    CRSF_ENABLED = True
     SQLALCHEMY_T = False
     JSONIFY_PRETTYPRRACK_MODIFICATIONSINT_REGULAR = True
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
+        )
     SECRET_KEY = "0WJ090JWJWTG0"
-
 
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # use in-memory SQLite for testing
-
-
-"""
-# Define different configurations
-class Config:
-    SECRET_KEY = 'your_secret_key'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-
-class DevelopmentConfig(Config):
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
+    TESTING = True
 
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///production.db'
+    SQLALCHEMY_DATABASE_URI = postgresdb_config
+
+
+class DevelopmentConfig(Config):
+    DEVELOPMENT = True
+    DEBUG = True
+
+# heroku related config
+class StagingConfig(Config):
+    DEVELOPMENT = True
+    DEBUG = True
 
 
 configurations = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "testing": TestConfig,
+    "staging": StagingConfig,
+    "default": DevelopmentConfig,
 }
-"""

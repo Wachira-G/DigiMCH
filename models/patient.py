@@ -22,10 +22,20 @@ class Patient(Person):
     next_of_kin_relationship = db.Column(db.String(128), nullable=True)
     next_of_kin_contacts = db.Column(db.String(128), nullable=True)
 
-    #__mapper_args__ = {
-    #    'polymorphic_identity':'patient',
-    #}
+    __mapper_args__ = {
+        'polymorphic_identity':'patient',
+    }
 
-    #def __init__(self, *args, **kwargs):
-    #    super().__init__(*args, **kwargs)
-    #    self.type = 'user'
+    def to_dict(self):
+        self_dict = {
+            "wcw_no": self.wcw_no,
+            "sys_gen_uniq_no": self.sys_gen_uniq_no,
+            "alt_phone_no": self.alt_phone_no,
+            "marital_status": self.marital_status,
+            "telephone": self.telephone,
+            "education_level": self.education_level,
+            "next_of_kin": self.next_of_kin,
+            "next_of_kin_relationship": self.next_of_kin_relationship,
+            "next_of_kin_contacts": self.next_of_kin_contacts,
+        }
+        return {**super().to_dict(), **self_dict}

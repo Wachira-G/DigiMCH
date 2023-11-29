@@ -23,7 +23,7 @@ class Person(db.Model):
     first_name = db.Column(db.String(128), nullable=False)
     surname = db.Column(db.String(128), nullable=False)
     middle_name = db.Column(db.String(128), nullable=True)
-    phone_no = db.Column(db.String(128), nullable=False)
+    phone_no = db.Column(db.String(128), unique=True, nullable=False)
     location_id = db.Column(db.String(128), nullable=True)
     sex = db.Column(db.String(128), nullable=False)
     birth_date = db.Column(db.DateTime, nullable=False)
@@ -32,12 +32,12 @@ class Person(db.Model):
 
     roles = db.relationship("Role", secondary=person_role, back_populates="person")
 
-    #type = db.Column(db.String(50))
+    type = db.Column(db.String(50))
 
-    #__mapper_args__ = {
-    #    'polymorphic_identity':'person',
-    #    'polymorphic_on':type
-    #}
+    __mapper_args__ = {
+        'polymorphic_identity':'person',
+        'polymorphic_on':type
+    }
 
     def __init__(self, *args, **kwargs):
         """Initialize a basic person."""
@@ -67,6 +67,11 @@ class Person(db.Model):
 
                 elif key == "password":
                     setattr(self, "password_hash", self.generate_hash(value))
+
+                elif key == "phone_no":
+                    if self.phone_no_exits(value):
+                        raise ValueError("Phone number already exists")
+                    setattr(self, key, value)
 
                 # save role
                 elif key == "role":
@@ -177,3 +182,10 @@ class Person(db.Model):
         """Assign roles to a person."""
         for role in roles:
             self.assign_role(role)
+    
+    def phone_no_exits(self, phone_no):
+        """Check if a phone number exists."""
+        person = Person.query.filter_by(phone_no=phone_no).first()
+        if person:
+            return True
+        return False
