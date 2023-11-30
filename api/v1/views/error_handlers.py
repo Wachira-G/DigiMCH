@@ -4,19 +4,19 @@ from api.v1.views import api_bp
 from flask import jsonify
 
 
-def register_error_handlers(app):
+def register_error_handlers(api_bp):
     """Register error handlers."""
-    app.register_error_handler(400, bad_request)
-    app.register_error_handler(404, not_found)
-    app.register_error_handler(401, unauthorized)
-    app.register_error_handler(403, forbidden)
-    app.register_error_handler(405, method_not_allowed)
-    app.register_error_handler(409, conflict)
-    app.register_error_handler(429, too_many_requests)
-    app.register_error_handler(500, internal_server_error)
-    app.register_error_handler(503, service_unavailable)
-    app.register_error_handler(504, gateway_timeout)
-    app.register_error_handler(501, not_implemented)
+    api_bp.errorhandler(400)(bad_request)
+    api_bp.errorhandler(404)(not_found)
+    api_bp.errorhandler(401)(unauthorized)
+    api_bp.errorhandler(403)(forbidden)
+    api_bp.errorhandler(405)(method_not_allowed)
+    api_bp.errorhandler(409)(conflict)
+    api_bp.errorhandler(429)(too_many_requests)
+    api_bp.errorhandler(500)(internal_server_error)
+    api_bp.errorhandler(503)(service_unavailable)
+    api_bp.errorhandler(504)(gateway_timeout)
+    api_bp.errorhandler(501)(not_implemented)
 
 
 # ----- client side errors -----#

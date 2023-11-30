@@ -13,6 +13,7 @@ patient_role = Role.query.filter_by(name="patient").first()
 
 
 def token_required(model):
+    """Decorator to check if a user is logged in."""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -41,6 +42,7 @@ def token_required(model):
 
 
 def role_required(*required_roles):
+    """Decorator to check if a user has the required role(s)."""
     def decorator(f):
         @wraps(f)
         def decorated_function(current_user, *args, **kwargs):
@@ -150,6 +152,22 @@ def create_patient(current_user):
 
 # endpoint to update a patient
 # requres admin or provider role
+@api_bp.route("/patients/<string:patient_id>", methods=["PUT"], strict_slashes=False)
+@token_required(User)
+@admin_or_provider_required
+def update_patient(current_user, patient_id):
+    """Update a patient."""
+    patient = db.session.query(Patient).get(patient_id)
+    if not patient:
+        abort(404)
+    data = request.get_json()
+    if not data:
+        abort(400)
+    for key, value in data.items():
+        if key in ["first_name", "surname", "middle_name", "phone_no", "email"]:
+            setattr(patient, key, value)
+    db.session.commit()
+    return jsonify(patient.to_dict()), 200
 
 # endpoint to update a patient's limited details
 # requires that user has patient role and phone_no matches logged in user's phone_no
@@ -157,3 +175,19 @@ def create_patient(current_user):
 
 # endpoint to delete a patient
 # requres admin or provider role
+@api_bp.route("/patients/<string:patient_id>", methods=["DELETE"], strict_slashes=False)
+@token_required(User)
+@admin_or_provider_required
+def delete_patient(current_user, patient_id):
+    """Delete a patient."""
+    patient = db.session.query(Patient).get(patient_id)
+    if not patient:
+        abort(404)
+    db.session.delete(patient)
+    db.session.commit()
+    return jsonify({"message": "Patient deleted"}), 200
+
+# endpoint for a patient profile admin or provider role (full details,
+#  visits(with encounters), appointments, [add more])
+
+# endpoint for a patient profile self
