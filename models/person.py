@@ -1,17 +1,27 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity,
+    decode_token
+)
+from flask_login import UserMixin # TODO will remove this
 from itsdangerous import BadSignature, SignatureExpired, TimedSerializer as Serializer
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import func
 from app import db
+from auth.blocklist import TokenBlockList
 
 from models.role import person_role, Role
 
 storage = db
-time = "%Y-%m-%dT%H:%M:%S.%f"
+time = "%Y-%m-%dT%H:%M:%S"
 
 
-class Person(db.Model):
+class Person(UserMixin, db.Model):
     """Define a basic person."""
 
     __tablename__ = "persons"
@@ -120,51 +130,71 @@ class Person(db.Model):
         self.updated_at = datetime.now()
         storage.session.commit()
 
-    def generate_auth_token(self, expiration=60*60*24):
-        """Generate the auth token."""
+    def generate_access_token(self, expiration=60*60):
+        """Generate the jwt access token."""
         if self.id is None:
             raise ValueError("Cannot generate token: Person instance has no id")
-        s = Serializer(current_app.config["SECRET_KEY"])
-        return s.dumps({"id": self.id}) # simplify token generation TODO: add expiration
+        #s = Serializer(current_app.config["SECRET_KEY"])
+        #return s.dumps({"id": self.id}) # simplify token generation TODO: add expiration
+        return create_access_token(identity=self.id, expires_delta=timedelta(seconds=expiration))
+
+    def generate_refresh_token(self, expiration=60*60*24):
+        """Generated the jwt refresh token."""
+        if self.id is None:
+            raise ValueError("Cannot generate token: Person instance has no id")
+        return create_refresh_token(identity=self.id, expires_delta=timedelta(seconds=expiration))
+
 
     @staticmethod
-    def verify_auth_token(token, model):
+    def verify_auth_token(token, model) -> object:
         """Verify the auth token."""
-        s = Serializer(current_app.config["SECRET_KEY"])
+        # s = Serializer(current_app.config["SECRET_KEY"])
+        # try:
+        #     data = s.loads(token, max_age=60*60*24)
+        # except (BadSignature, SignatureExpired):
+        #     return None
+        # instance = db.session.get(model, data["id"])
         try:
-            data = s.loads(token, max_age=60*60*24)
-        except (BadSignature, SignatureExpired):
+            if token.startswith("Bearer "): # strip the bearer prefix
+                token = token[7:]
+            if TokenBlockList.is_jti_blocklisted(token):
+                return None
+            data = decode_token(encoded_token=token)
+        except Exception as e:
+            print(f"Error decoding token: {e}")
             return None
-        instance = db.session.get(model, data["id"])
+        if 'sub' not in data:  # sub = identity
+            return None
+        instance = model.query.get(data["sub"])
         return instance
 
     @staticmethod
-    def generate_hash(password):
+    def generate_hash(password) -> str   :
         """Generate a password hash."""
         return generate_password_hash(password)
 
-    def check_password(self, password):
-        """Check if a password matches the hash."""
+    def check_password(self, password)-> bool:
+        """Check if a password matches the hash.
+        Returns True if it does, False if it doesn't.
+        """
         return check_password_hash(self.password_hash, password)
 
-    def set_password(self, password):
+    def set_password(self, password) -> None:
         """Set a password."""
         self.password_hash = self.generate_hash(password)
 
     def get_role(self, role_name):
         """Get a role."""
+        role = None
         if role_name is None or '':
             return None
         try:
             role = Role.query.filter_by(name=role_name).first()
-            if role is None:
-                role = Role(name=role_name)
-                storage.session.add(role)
-                storage.session.commit()
         except Exception as e:
             print(f"Failed to get role: {e}")
             return None
-        return role
+        finally:
+            return role
 
     def assign_role(self, role):
         """Assign a role to a person."""

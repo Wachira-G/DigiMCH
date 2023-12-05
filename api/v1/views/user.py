@@ -1,13 +1,17 @@
 """User related endpoints."""
 
-from flask import jsonify, request, abort
+from flask import jsonify, request, abort, current_app
 from functools import wraps
+
+from flask_jwt_extended import jwt_required
 from app import db
 from api.v1.views import api_bp
 from models.person import Person
 from models.role import Role
 from models.user import User
-from api.v1.views.role import create_role
+
+#jwt = current_app.extensions["jwt"]
+#jwt_required = jwt.required
 
 
 admin_role = Role.query.filter_by(name="admin").first()
@@ -16,6 +20,7 @@ patient_role = Role.query.filter_by(name="patient").first()
 
 
 def admin_required(f):
+    """Restrict access to admin users."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Get the auth token
@@ -45,16 +50,17 @@ def admin_required(f):
 
     return decorated_function
 
-def create_role(name):
+def get_role(name):
+    """Return a role by name."""
+    if name:
+        name = name.lower()
     role = Role.query.filter_by(name=name).first()
-    if role is None:
-        role = Role(name=name.lower())
-        db.session.add(role)
     return role
 
 # get all users
-@api_bp.route("/users", methods=["GET"], strict_slashes=False)
+@api_bp.route("/users", methods=["GET"], strict_slashes=False, endpoint='get_users')
 @admin_required
+@jwt_required()
 def get_users():
     """Return all users."""
     users = db.session.query(User).all()
@@ -62,8 +68,9 @@ def get_users():
 
 
 # create a user
-@api_bp.route("/users", methods=["POST"], strict_slashes=False)
+@api_bp.route("/users", methods=["POST"], strict_slashes=False, endpoint='create_user')
 @admin_required
+@jwt_required()
 def create_user():
     """Create a user."""
     data = request.get_json()
@@ -72,12 +79,18 @@ def create_user():
 
     roles = []
     if "role" in data:
-        roles.append(create_role(data["role"]))
+        role = get_role(data["role"])
+        if not role:
+            abort(400, f'Invalid role: {data["role"]}')
+        roles.append(role)
         del data["role"]
 
     if "roles" in data:
         for role_name in data["roles"]:
-            roles.append(create_role(role_name))
+            role = get_role(role_name)
+            if not role:
+                abort(400, f'Invalid role: {role_name}')
+            roles.append(role)
         del data["roles"]
 
     user = User(**data)
@@ -87,12 +100,15 @@ def create_user():
 
     db.session.add(user)
     db.session.commit()
+
+    # TODO send code to user's phone number to use as login and prompt sett passowrd
     return jsonify(user.to_dict()), 201
 
 # update a user
 # TODO what happens if current user wants to update self, and is not admin?
 @api_bp.route("/users/<string:user_id>", methods=["PUT"], strict_slashes=False)
 @admin_required
+@jwt_required()
 def update_user(user_id):
     """Update a user."""
     data = request.get_json()
@@ -101,12 +117,12 @@ def update_user(user_id):
 
     user = User.query.get(user_id)
     if not user:
-        abort(404)
+        abort(404, "User not found")
 
     if "role" in data:
         role = user.get_role(data["role"].lower())
         if role is None:
-            role = create_role(data["role"].lower())
+            abort(400, f'Invalid role: {data["role"]}')
         user.assign_role(role)
         del data["role"]
 
@@ -114,7 +130,7 @@ def update_user(user_id):
         for role in data["roles"]:
             role = user.get_role(role)
             if role is None:
-                role = create_role(role)
+                abort(400, f'Invalid role: {role}')
             user.assign_role(role)
         del data["roles"]
 
@@ -122,6 +138,8 @@ def update_user(user_id):
         role = Role.query.filter_by(name=data["remove_role"].lower()).first()
         if role:
             user.remove_role(role)
+        else:
+            abort(400, f'Invalid role: {data["remove_role"]}')
         del data["remove_role"]
 
     user.update(**data)
@@ -131,11 +149,12 @@ def update_user(user_id):
 # delete a user
 @api_bp.route("/users/<string:user_id>", methods=["DELETE"], strict_slashes=False)
 @admin_required
+@jwt_required()
 def delete_user(user_id):
     """Delete a user."""
     user = User.query.get(user_id)
     if not user:
-        abort(404)
+        abort(404, "User not found")
     db.session.delete(user)
     db.session.commit()
     return jsonify({}), 204
@@ -144,11 +163,12 @@ def delete_user(user_id):
 # get a user by id
 @api_bp.route("/users/<string:user_id>", methods=["GET"], strict_slashes=False)
 @admin_required
+@jwt_required()
 def get_user(user_id):
     """Return a user."""
     user = User.query.get(user_id)
     if not user:
-        abort(404)
+        abort(404, "User not found")
     return jsonify(user.to_dict()), 200
 
 
@@ -157,9 +177,10 @@ def get_user(user_id):
     "/users/phone_no/<string:phone_no>", methods=["GET"], strict_slashes=False
 )
 @admin_required
+@jwt_required()
 def get_user_by_phone_no(phone_no):
     """Return a user."""
     user = User.query.filter_by(phone_no=phone_no).first()
     if not user:
-        abort(404)
+        abort(404, "User not found")
     return jsonify(user.to_dict()), 200

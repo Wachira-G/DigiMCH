@@ -24,6 +24,16 @@ class Config(object):
         "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
         )
     SECRET_KEY = "0WJ090JWJWTG0"
+    JWT_SECRET_KEY = "0WJ090JWJWTG090E0JWJW"
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_CHECKS = ["access", "refresh"]
+    JWT_ACCESS_TOKEN_EXPIRES = 60 * 60 * 24
+    JWT_REFRESH_TOKEN_EXPIRES = 60 * 60 * 24 * 30
+    # JWT_TOKEN_LOCATION = ["headers", "cookies"]
+    # JWT_COOKIE_SECURE = False
+    # JWT_COOKIE_CSRF_PROTECT = False
+    # JWT_CSRF_CHECK_FORM = False
+    # JWT_COOKIE_DOMAIN = "localhost"
 
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # use in-memory SQLite for testing

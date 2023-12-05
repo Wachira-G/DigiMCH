@@ -15,7 +15,7 @@ def create_admin(db, User, Role, Person):
         if admin_role:
             pass
         else:
-            admin_role = Role(name="admin", description="root Administrator")
+            admin_role = Role(name="admin", description="Administrator")
             db.session.add(admin_role)
             db.session.commit()
     except Exception as e:
@@ -28,7 +28,7 @@ def create_admin(db, User, Role, Person):
         if provider_role:
             pass
         else:
-            provider_role = Role(name="provider")
+            provider_role = Role(name="provider", description="Provider")
             db.session.add(provider_role)
             db.session.commit()
     except Exception as e:
@@ -41,7 +41,7 @@ def create_admin(db, User, Role, Person):
         if patient_role:
             pass
         else:
-            patient_role = Role(name="patient")
+            patient_role = Role(name="patient", description="Patient")
             db.session.add(patient_role)
             db.session.commit()
     except Exception as e:
@@ -50,15 +50,15 @@ def create_admin(db, User, Role, Person):
 
     # create initial admin user
     try:
-        admin = User.query.filter_by(phone_no="254700000000").first()
+        admin = User.query.filter_by(phone_no="+254700000000").first()
         if admin:
             return admin
         admin = User(
             first_name="Root Adm",
             surname="Admin",
-            phone_no="254700000000",
+            phone_no="+254700000000",
             middle_name="Admin",
-            password_hash=Person.generate_hash("admin"),
+            password_hash=Person.generate_hash("1Admin234"),
             sex="root",
             birth_date=datetime.now().strftime(time),
             facility_id="1",
