@@ -1,4 +1,4 @@
-"""USer module to handle persons with admin and user roles."""
+"""User module to handle persons with admin and user roles."""
 
 from models.person import Person
 from app import db

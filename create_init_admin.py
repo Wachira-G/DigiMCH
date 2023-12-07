@@ -54,7 +54,7 @@ def create_admin(db, User, Role, Person):
         if admin:
             return admin
         admin = User(
-            first_name="Root Adm",
+            first_name="Root Admin",
             surname="Admin",
             phone_no="+254700000000",
             middle_name="Admin",

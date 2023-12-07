@@ -1,8 +1,7 @@
 """Authentication blueprint."""
 
-from hmac import new
-from flask import jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask import jsonify, request, abort
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, decode_token
 from flask_login import login_user, logout_user, login_required, current_user
 from auth import auth_bp
 from models import user
@@ -24,7 +23,7 @@ def refresh():
     current_user_id = get_jwt_identity()
     new_token = None
     if current_user_id:
-        new_token = Person.query.get(current_user_id).generate_access_token()
+        new_token = db.session.get(User, current_user_id).generate_access_token()
     return jsonify(access_token=new_token), 200
 
 # api login
@@ -51,6 +50,7 @@ def login():
 
 
 def validate_phone_passwd(data) -> tuple:
+    """Validate phone number and password."""
     phone_no = data.get('phone_no')
     password = data.get('password')
 
@@ -63,6 +63,7 @@ def validate_phone_passwd(data) -> tuple:
     return True, phone_no, password
 
 def get_user_or_patient(phone_no) -> tuple:
+    """Get user or patient instance."""
     person = Person.query.filter_by(phone_no=phone_no).first()
 
     if not person:
@@ -113,19 +114,21 @@ def login_post():
     return response
 
 
-# api logout
-@auth_bp.route('/api/v1/logout', methods=['GET'], strict_slashes=False)
+@auth_bp.route('/api/v1/logout', methods=['POST'])
 @jwt_required()
 def logout():
-    jti = get_jwt()['jti']
-    db.session.add(TokenBlockList(jti=jti))
+    access_jti = get_jwt()['jti']
+    db.session.add(TokenBlockList(jti=access_jti))
 
-    refresh_jti = get_jwt(refresh=True)['jti']
-    db.session.add(TokenBlockList(jti=refresh_jti))
+    refresh_token = request.json.get('refresh_token', None)
+    if refresh_token:
+        refresh_jti = decode_token(refresh_token)['jti']
+        db.session.add(TokenBlockList(jti=refresh_jti))
+    else:
+        abort(400, description='Refresh token is missing')
 
     db.session.commit()
     return jsonify({'message': 'Logged out successfully'}), 200
-
 
 # api forgot password
 @auth_bp.route('/api/v1/forgot-password', methods=['GET'], strict_slashes=False)

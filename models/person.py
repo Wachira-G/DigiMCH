@@ -146,14 +146,8 @@ class Person(UserMixin, db.Model):
 
 
     @staticmethod
-    def verify_auth_token(token, model) -> object:
+    def verify_auth_token(token, model):
         """Verify the auth token."""
-        # s = Serializer(current_app.config["SECRET_KEY"])
-        # try:
-        #     data = s.loads(token, max_age=60*60*24)
-        # except (BadSignature, SignatureExpired):
-        #     return None
-        # instance = db.session.get(model, data["id"])
         try:
             if token.startswith("Bearer "): # strip the bearer prefix
                 token = token[7:]
@@ -200,6 +194,7 @@ class Person(UserMixin, db.Model):
         """Assign a role to a person."""
         if role not in self.roles:
             self.roles.append(role)
+            storage.session.add(self)
             storage.session.commit()
 
     def remove_role(self, role):

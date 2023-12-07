@@ -7,13 +7,11 @@ from flask_jwt_extended import JWTManager
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 import os
-
-import jwt
 import config.config as config
 
 db = SQLAlchemy()
-login_manager = LoginManager()
-jwt = JWTManager()
+jwt_manager = JWTManager()
+login_manager = LoginManager() # TODO wont need this if using JWT
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -39,24 +37,29 @@ def create_app():
     config_class = config.configurations.get(env, config.configurations["default"])
     app.config.from_object(config_class)
 
+    # Initialize extensions
+    # Database
     try:
         db.init_app(app)
     except Exception as e:
         print(f"Failed to initialize database: {e}")
         return None
-    
+
+    # JWT - JSON Web Tokens
     try:
-        jwt.init_app(app)
+        jwt_manager.init_app(app)
     except Exception as e:
         print(f"Failed to initialize JWT: {e}")
         return None
-    
+
+    # Login Manager
     try:
         login_manager.init_app(app) # TODO wont need this if using JWT
     except Exception as e:
         print(f"Failed to initialize login manager: {e}")
         return None
 
+    # Create database tables and register blueprints and error handlers in app context
     with app.app_context():
         try:
             from auth.blocklist import TokenBlockList
@@ -86,7 +89,7 @@ def create_app():
 
         # Register jwt token_in_blocklist_loader
         try:
-            @jwt.token_in_blocklist_loader
+            @jwt_manager.token_in_blocklist_loader
             def check_if_token_in_blocklist(jwt_header, decrypted_token):
                 jti = decrypted_token["jti"]
                 return TokenBlockList.is_jti_blocklisted(jti)
