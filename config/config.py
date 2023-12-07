@@ -1,4 +1,5 @@
 import os
+
 # from dot-env import load_dotenv
 
 # load_dotenv()
@@ -22,7 +23,7 @@ class Config(object):
     JSONIFY_PRETTYPRRACK_MODIFICATIONSINT_REGULAR = True
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
-        )
+    )
     SECRET_KEY = "0WJ090JWJWTG0"
     JWT_SECRET_KEY = "0WJ090JWJWTG090E0JWJW"
     JWT_BLACKLIST_ENABLED = True
@@ -35,8 +36,9 @@ class Config(object):
     # JWT_CSRF_CHECK_FORM = False
     # JWT_COOKIE_DOMAIN = "localhost"
 
+
 class TestConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # use in-memory SQLite for testing
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"  # use in-memory SQLite for testing
     TESTING = True
 
 
@@ -48,6 +50,7 @@ class ProductionConfig(Config):
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
+
 
 # heroku related config
 class StagingConfig(Config):

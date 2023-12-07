@@ -18,25 +18,26 @@ patient_role = db.session.query(Role).filter_by(name="patient").first()
 
 def admin_required(f):
     """Restrict access to admin users."""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Get the auth token
         token = request.headers.get("Authorization")
-        if token.startswith("Bearer "): # strip the bearer prefix
-                token = token[7:]
+        if token.startswith("Bearer "):  # strip the bearer prefix
+            token = token[7:]
 
         if not token:
             return jsonify({"message": "Token is missing"}), 401
 
-        current_user_id = decode_token(encoded_token=token)['sub']
+        current_user_id = decode_token(encoded_token=token)["sub"]
 
         # Get the current user
         if current_user_id is None:
-            return(
+            return (
                 jsonify(
                     {"message": "Authentication is required to access this resource"}
-                ), 
-                401
+                ),
+                401,
             )
         current_user = db.session.get(User, current_user_id)
         if current_user is None:
@@ -60,6 +61,7 @@ def admin_required(f):
 
     return decorated_function
 
+
 def get_role(name):
     """Return a role by name - helper function."""
     if name:
@@ -67,8 +69,9 @@ def get_role(name):
     role = db.session.query(Role).filter_by(name=name).first()
     return role
 
+
 # get all users
-@api_bp.route("/users", methods=["GET"], strict_slashes=False, endpoint='get_users')
+@api_bp.route("/users", methods=["GET"], strict_slashes=False, endpoint="get_users")
 @admin_required
 @jwt_required()
 def get_users():
@@ -78,14 +81,14 @@ def get_users():
 
 
 # create a user
-@api_bp.route("/users", methods=["POST"], strict_slashes=False, endpoint='create_user')
+@api_bp.route("/users", methods=["POST"], strict_slashes=False, endpoint="create_user")
 @admin_required
 @jwt_required()
 def create_user():
     """Create a user."""
     data = request.get_json()
     if not data:
-        abort(400, 'Invalid data')
+        abort(400, "Invalid data")
 
     roles = []
     if "role" in data:
@@ -99,13 +102,13 @@ def create_user():
         for role_name in data["roles"]:
             role = get_role(role_name)
             if not role:
-                abort(400, f'Invalid role: {role_name}')
+                abort(400, f"Invalid role: {role_name}")
             roles.append(role)
         del data["roles"]
 
     user = User(**data)
     if not user:
-        abort(400, 'Failed to create user')
+        abort(400, "Failed to create user")
     user.roles.extend(roles)
 
     db.session.add(user)
@@ -113,6 +116,7 @@ def create_user():
 
     # TODO send code to user's phone number to use as login and prompt sett passowrd
     return jsonify(user.to_dict()), 201
+
 
 # update a user
 # TODO what happens if current user wants to update self, and is not admin?
@@ -123,7 +127,7 @@ def update_user(user_id):
     """Update a user."""
     data = request.get_json()
     if not data:
-        abort(400, 'Invalid data')
+        abort(400, "Invalid data")
 
     user = db.session.get(User, user_id)
     if not user:
@@ -140,12 +144,14 @@ def update_user(user_id):
         for role in data["roles"]:
             role = user.get_role(role)
             if role is None:
-                abort(400, f'Invalid role: {role}')
+                abort(400, f"Invalid role: {role}")
             user.assign_role(role)
         del data["roles"]
 
     if "remove_role" in data:
-        role = db.session.query(Role).filter_by(name=data["remove_role"].lower()).first()
+        role = (
+            db.session.query(Role).filter_by(name=data["remove_role"].lower()).first()
+        )
         if role:
             user.remove_role(role)
         else:
@@ -155,13 +161,14 @@ def update_user(user_id):
     user.update(**data)
     return jsonify(user.to_dict()), 201
 
+
 @api_bp.route("/users/me", methods=["PUT"], strict_slashes=False)
 @jwt_required()
 def update_current_user():
     """Update the current user."""
     data = request.get_json()
     if not data:
-        abort(400, 'Invalid data')
+        abort(400, "Invalid data")
 
     token = request.headers.get("Authorization")
     if not token:
@@ -170,9 +177,7 @@ def update_current_user():
     current_user = db.session.get(User, get_jwt_identity())
     if current_user is None:
         return (
-            jsonify(
-                {"message": "Authentication is required to access this resource"}
-            ),
+            jsonify({"message": "Authentication is required to access this resource"}),
             401,
         )
 
@@ -187,19 +192,20 @@ def update_current_user():
             current_user.assign_role(role)
             del data["role"]
 
-
     if "roles" in data:
         for role_name in data["roles"]:
             role = get_role(role_name)
             if not role:
-                abort(400, f'Invalid role: {role_name}')
+                abort(400, f"Invalid role: {role_name}")
             if role in current_user.roles:
                 continue
             current_user.assign_role(role)
         del data["roles"]
 
     if "remove_role" in data:
-        role = db.session.query(Role).filter_by(name=data["remove_role"].lower()).first()
+        role = (
+            db.session.query(Role).filter_by(name=data["remove_role"].lower()).first()
+        )
         if role:
             current_user.remove_role(role)
         else:

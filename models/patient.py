@@ -22,9 +22,7 @@ class Patient(Person):
     next_of_kin_relationship = db.Column(db.String(128), nullable=True)
     next_of_kin_contacts = db.Column(db.String(128), nullable=True)
 
-    __mapper_args__ = {
-        'polymorphic_identity':'patient',
-    }
+    __mapper_args__ = {"polymorphic_identity": "patient"}
 
     def to_dict(self):
         self_dict = {

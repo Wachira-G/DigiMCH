@@ -5,6 +5,7 @@ from datetime import datetime
 
 time = "%Y-%m-%dT%H:%M:%S"
 
+
 def create_admin(db, User, Role, Person):
     """Create an admin user."""
 

@@ -12,13 +12,13 @@ class Visit(db.Model):
     __tablename__ = "visits"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     start_datetime = db.Column(db.DateTime, nullable=False)
     end_datetime = db.Column(db.DateTime)
     visit_type = db.Column(db.String(128), nullable=True)
     #  (e.g., routine check-up, emergency, follow-up).
-    encounters = db.relationship('Encounter', backref='visit', lazy=True)
+    encounters = db.relationship("Encounter", backref="visit", lazy=True)
 
     def __init__(self, start_datetime=datetime.now(), *args, **kwargs):
         """Initialize a visit instance."""
@@ -33,7 +33,7 @@ class Visit(db.Model):
                 else:
                     raise ValueError(f"Cannot find {model.__name__} with that id")
 
-            elif key != '__class__':
+            elif key != "__class__":
                 setattr(self, key, value)
 
     def end_visit(self, end_datetime=datetime.now()):
@@ -48,7 +48,7 @@ class Visit(db.Model):
             "user_id": self.user_id,
             "start_datetime": self.start_datetime,
             "end_datetime": self.end_datetime,
-            "visit_type": self.visit_type
+            "visit_type": self.visit_type,
         }
 
     def __repr__(self):

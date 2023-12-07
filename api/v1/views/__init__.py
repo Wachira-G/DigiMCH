@@ -7,7 +7,8 @@ from api.v1.views.patient import *
 from api.v1.views.error_handlers import *
 from api.v1.views.user import *
 from api.v1.views.role import *
-#from api.v1.views.auth import *
+
+# from api.v1.views.auth import *
 from api.v1.views.appointment import *
 from api.v1.views.visit import *
 from api.v1.views.encounter import *

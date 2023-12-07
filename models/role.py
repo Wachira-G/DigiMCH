@@ -21,7 +21,7 @@ class Role(db.Model):
     # person_id = db.Column(db.Integer, db.ForeignKey("persons.id"))
     person = db.relationship("Person", secondary=person_role, back_populates="roles")
 
-    def __init__(self, name: str, role_description: str=None, *args, **kwargs):
+    def __init__(self, name: str, role_description: str = None, *args, **kwargs):
         """Initialize a Role object."""
         self.name = name
         self.role_description = role_description
@@ -31,4 +31,8 @@ class Role(db.Model):
 
     def to_dict(self):
         """Return a dictionary representation of a Role object."""
-        return {"id": self.id, "name": self.name, "role_description": self.role_description}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "role_description": self.role_description,
+        }

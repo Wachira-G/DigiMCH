@@ -5,9 +5,9 @@ from flask_jwt_extended import (
     create_refresh_token,
     jwt_required,
     get_jwt_identity,
-    decode_token
+    decode_token,
 )
-from flask_login import UserMixin # TODO will remove this
+from flask_login import UserMixin  # TODO will remove this
 from itsdangerous import BadSignature, SignatureExpired, TimedSerializer as Serializer
 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -26,9 +26,13 @@ class Person(UserMixin, db.Model):
 
     __tablename__ = "persons"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True) 
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = db.Column(db.DateTime(timezone=True), onupdate=func.now(), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    created_at = db.Column(
+        db.DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = db.Column(
+        db.DateTime(timezone=True), onupdate=func.now(), nullable=False
+    )
 
     first_name = db.Column(db.String(128), nullable=False)
     surname = db.Column(db.String(128), nullable=False)
@@ -44,10 +48,7 @@ class Person(UserMixin, db.Model):
 
     type = db.Column(db.String(50))
 
-    __mapper_args__ = {
-        'polymorphic_identity':'person',
-        'polymorphic_on':type
-    }
+    __mapper_args__ = {"polymorphic_identity": "person", "polymorphic_on": type}
 
     def __init__(self, *args, **kwargs):
         """Initialize a basic person."""
@@ -106,15 +107,24 @@ class Person(UserMixin, db.Model):
     def to_dict(self):
         """returns a dictionary containing all keys/values of the instance"""
         new_dict = {}
-        for attr in ['id', 'created_at', 'updated_at', 'first_name',
-                     'surname', 'middle_name', 'phone_no', 'location_id',
-                     'sex', 'birth_date']:
+        for attr in [
+            "id",
+            "created_at",
+            "updated_at",
+            "first_name",
+            "surname",
+            "middle_name",
+            "phone_no",
+            "location_id",
+            "sex",
+            "birth_date",
+        ]:
             value = getattr(self, attr, None)
             if value is not None:
                 if isinstance(value, datetime):
                     value = value.strftime(time)
                 else:
-                    new_dict[attr] = value  
+                    new_dict[attr] = value
         new_dict["__class__"] = self.__class__.__name__
         if "_sa_instance_state" in new_dict:
             del new_dict["_sa_instance_state"]
@@ -130,26 +140,29 @@ class Person(UserMixin, db.Model):
         self.updated_at = datetime.now()
         storage.session.commit()
 
-    def generate_access_token(self, expiration=60*60):
+    def generate_access_token(self, expiration=60 * 60):
         """Generate the jwt access token."""
         if self.id is None:
             raise ValueError("Cannot generate token: Person instance has no id")
-        #s = Serializer(current_app.config["SECRET_KEY"])
-        #return s.dumps({"id": self.id}) # simplify token generation TODO: add expiration
-        return create_access_token(identity=self.id, expires_delta=timedelta(seconds=expiration))
+        # s = Serializer(current_app.config["SECRET_KEY"])
+        # return s.dumps({"id": self.id}) # simplify token generation TODO: add expiration
+        return create_access_token(
+            identity=self.id, expires_delta=timedelta(seconds=expiration)
+        )
 
-    def generate_refresh_token(self, expiration=60*60*24):
+    def generate_refresh_token(self, expiration=60 * 60 * 24):
         """Generated the jwt refresh token."""
         if self.id is None:
             raise ValueError("Cannot generate token: Person instance has no id")
-        return create_refresh_token(identity=self.id, expires_delta=timedelta(seconds=expiration))
-
+        return create_refresh_token(
+            identity=self.id, expires_delta=timedelta(seconds=expiration)
+        )
 
     @staticmethod
     def verify_auth_token(token, model):
         """Verify the auth token."""
         try:
-            if token.startswith("Bearer "): # strip the bearer prefix
+            if token.startswith("Bearer "):  # strip the bearer prefix
                 token = token[7:]
             if TokenBlockList.is_jti_blocklisted(token):
                 return None
@@ -157,17 +170,17 @@ class Person(UserMixin, db.Model):
         except Exception as e:
             print(f"Error decoding token: {e}")
             return None
-        if 'sub' not in data:  # sub = identity
+        if "sub" not in data:  # sub = identity
             return None
         instance = model.query.get(data["sub"])
         return instance
 
     @staticmethod
-    def generate_hash(password) -> str   :
+    def generate_hash(password) -> str:
         """Generate a password hash."""
         return generate_password_hash(password)
 
-    def check_password(self, password)-> bool:
+    def check_password(self, password) -> bool:
         """Check if a password matches the hash.
         Returns True if it does, False if it doesn't.
         """
@@ -180,7 +193,7 @@ class Person(UserMixin, db.Model):
     def get_role(self, role_name):
         """Get a role."""
         role = None
-        if role_name is None or '':
+        if role_name is None or "":
             return None
         try:
             role = Role.query.filter_by(name=role_name).first()
@@ -202,12 +215,12 @@ class Person(UserMixin, db.Model):
         if role in self.roles:
             self.roles.remove(role)
             storage.session.commit()
-    
+
     def assign_roles(self, roles):
         """Assign roles to a person."""
         for role in roles:
             self.assign_role(role)
-    
+
     def phone_no_exits(self, phone_no):
         """Check if a phone number exists."""
         person = Person.query.filter_by(phone_no=phone_no).first()

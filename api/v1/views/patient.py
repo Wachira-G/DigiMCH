@@ -14,6 +14,7 @@ patient_role = Role.query.filter_by(name="patient").first()
 
 def token_required(model):
     """Decorator to check if a user is logged in."""
+
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -43,6 +44,7 @@ def token_required(model):
 
 def role_required(*required_roles):
     """Decorator to check if a user has the required role(s)."""
+
     def decorator(f):
         @wraps(f)
         def decorated_function(current_user, *args, **kwargs):
@@ -80,7 +82,7 @@ patient_required = role_required("patient")
 # decorator to check if user is admin or provider
 admin_or_provider_required = role_required("admin", "provider")
 
-#--------------------ENDPOINTS ---------------------------
+# --------------------ENDPOINTS ---------------------------
 
 # endpoint to get all patients
 # requres admin or provider role
@@ -169,6 +171,7 @@ def update_patient(current_user, patient_id):
     db.session.commit()
     return jsonify(patient.to_dict()), 200
 
+
 # endpoint to update a patient's limited details
 # requires that user has patient role and phone_no matches logged in user's phone_no
 
@@ -186,6 +189,7 @@ def delete_patient(current_user, patient_id):
     db.session.delete(patient)
     db.session.commit()
     return jsonify({"message": "Patient deleted"}), 200
+
 
 # endpoint for a patient profile admin or provider role (full details,
 #  visits(with encounters), appointments, [add more])

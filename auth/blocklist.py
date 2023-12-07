@@ -5,6 +5,7 @@ from flask_jwt_extended import decode_token
 from app import db
 from sqlalchemy.sql import func
 
+
 class TokenBlockList(db.Model):
     """Define a block list model."""
 
@@ -12,7 +13,9 @@ class TokenBlockList(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     jti = db.Column(db.String(128), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = db.Column(
+        db.DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     def __init__(self, jti):
         """Initialize a block list model."""
@@ -32,7 +35,7 @@ class TokenBlockList(db.Model):
         """Check if a token is blocklisted."""
         query = TokenBlockList.query.filter_by(jti=jti).first()
         return bool(query)
-    
+
     @staticmethod
     def clean_block_list():
         """Delete all block list entries."""
@@ -40,6 +43,6 @@ class TokenBlockList(db.Model):
         blocklisted_tokens = TokenBlockList.query.all()
         for token in blocklisted_tokens:
             metadata = decode_token(token.jti)
-            if metadata['exp'] < now:
+            if metadata["exp"] < now:
                 db.session.delete(token)
         db.session.commit()

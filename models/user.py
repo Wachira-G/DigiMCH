@@ -13,9 +13,7 @@ class User(Person):
     facility_id = db.Column(db.String(128), nullable=False)
     kmpdu_no = db.Column(db.String(128), nullable=True)
 
-    __mapper_args__ = {
-         'polymorphic_identity':'user',
-    }
+    __mapper_args__ = {"polymorphic_identity": "user"}
 
     def to_dict(self):
         self_dict = {"facility_id": self.facility_id, "kmpdu_no": self.kmpdu_no}

@@ -11,7 +11,8 @@ import config.config as config
 
 db = SQLAlchemy()
 jwt_manager = JWTManager()
-login_manager = LoginManager() # TODO wont need this if using JWT
+login_manager = LoginManager()  # TODO wont need this if using JWT
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -54,7 +55,7 @@ def create_app():
 
     # Login Manager
     try:
-        login_manager.init_app(app) # TODO wont need this if using JWT
+        login_manager.init_app(app)  # TODO wont need this if using JWT
     except Exception as e:
         print(f"Failed to initialize login manager: {e}")
         return None
@@ -89,20 +90,22 @@ def create_app():
 
         # Register jwt token_in_blocklist_loader
         try:
+
             @jwt_manager.token_in_blocklist_loader
             def check_if_token_in_blocklist(jwt_header, decrypted_token):
                 jti = decrypted_token["jti"]
                 return TokenBlockList.is_jti_blocklisted(jti)
+
         except Exception as e:
             print(f"Failed to load jwt token_in_blocklist_loader: {e}")
             return None
 
         # Register error handlers
-        #try:
+        # try:
         ##    from api.v1.views.error_handlers import register_error_handlers
 
         #    register_error_handlers(api_bp)
-        #except Exception as e:
+        # except Exception as e:
         #    print(f"Failed to register error handlers: {e}")
         #    return None
 
@@ -110,6 +113,7 @@ def create_app():
         try:
             # create default roles and initial admin user
             from create_init_admin import create_admin
+
             admin = create_admin(db, User, Role, Person)
             if not admin:
                 print("Failed to create admin user.")
@@ -119,6 +123,7 @@ def create_app():
             return None
 
     return app
+
 
 if __name__ == "__main__":
     app = create_app()
