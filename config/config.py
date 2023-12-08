@@ -24,6 +24,10 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL", "sqlite:///" + os.path.join(basedir, "tmp", "development.db")
     )
+    if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
+            "postgres://", "postgresql://", 1
+        )
     SECRET_KEY = "0WJ090JWJWTG0"
     JWT_SECRET_KEY = "0WJ090JWJWTG090E0JWJW"
     JWT_BLACKLIST_ENABLED = True
@@ -44,7 +48,6 @@ class TestConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
 
 
 class DevelopmentConfig(Config):
