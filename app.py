@@ -115,11 +115,11 @@ def create_app(*args, **kwargs):
 
             admin = create_admin(db, User, Role, Person)
             if not admin:
-                print("Failed to create admin user.")
-                return None
+                logging.error("Failed to create admin user.")
+                raise Exception("Failed to create admin user.")
         except Exception as e:
             logging.error(f"Failed to create admin user: {e}")
-            return "Failed to create admin user.", 500
+            raise
 
     return app
 
