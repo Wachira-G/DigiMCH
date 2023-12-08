@@ -18,7 +18,6 @@ login_manager = LoginManager()  # TODO wont need this if using JWT
 def load_user(user_id):
     """Load a user."""
     from models.user import User
-
     return User.query.get(user_id)
 
 
@@ -44,21 +43,21 @@ def create_app(*args, **kwargs):
         db.init_app(app)
     except Exception as e:
         logging.error(f"Failed to initialize database: {e}")
-        return "Failed to initialize database.", 500
+        raise
 
     # JWT - JSON Web Tokens
     try:
         jwt_manager.init_app(app)
     except Exception as e:
         logging.error(f"Failed to initialize JWT: {e}")
-        return "Failed to initialize JWT.", 500
+        raise
 
     # Login Manager
     try:
         login_manager.init_app(app)  # TODO wont need this if using JWT
     except Exception as e:
         logging.error(f"Failed to initialize login manager: {e}")
-        return "Failed to initialize login manager.", 500
+        raise
 
     # Create database tables and register blueprints and error handlers in app context
     with app.app_context():
@@ -75,7 +74,7 @@ def create_app(*args, **kwargs):
             db.create_all()
         except Exception as e:
             logging.error(f"Failed to create database tables: {e}")
-            return "Failed to create database tables.", 500
+            raise
 
         # Register blueprints
         try:
@@ -86,7 +85,7 @@ def create_app(*args, **kwargs):
             app.register_blueprint(auth_bp)
         except Exception as e:
             logging.error(f"Failed to register blueprint: {e}")
-            return "Failed to register blueprint.", 500
+            raise
 
         # Register jwt token_in_blocklist_loader
         try:
@@ -98,7 +97,7 @@ def create_app(*args, **kwargs):
 
         except Exception as e:
             logging.error(f"Failed to load jwt token_in_blocklist_loader: {e}")
-            return "Failed to load jwt token_in_blocklist_loader.", 500
+            raise
 
         # Register error handlers
         # try:
