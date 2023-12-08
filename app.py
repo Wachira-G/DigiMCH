@@ -22,7 +22,7 @@ def load_user(user_id):
     return User.query.get(user_id)
 
 
-def create_app():
+def create_app(*args, **kwargs):
     """Create an app instance.
     
     :param config_name: The name of the configuration to use.
