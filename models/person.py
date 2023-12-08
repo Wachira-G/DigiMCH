@@ -41,7 +41,7 @@ class Person(UserMixin, db.Model):
     location_id = db.Column(db.String(128), nullable=True)
     sex = db.Column(db.String(128), nullable=False)
     birth_date = db.Column(db.DateTime, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(512), nullable=False)
     # created_by = db.Column(db.Integer, nullable=False)
 
     roles = db.relationship("Role", secondary=person_role, back_populates="person")
