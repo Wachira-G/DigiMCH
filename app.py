@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Main entry point for the application."""
 
-from venv import create
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 import os
+import logging
 import config.config as config
 
 db = SQLAlchemy()
@@ -43,22 +43,22 @@ def create_app(*args, **kwargs):
     try:
         db.init_app(app)
     except Exception as e:
-        print(f"Failed to initialize database: {e}")
-        return None
+        logging.error(f"Failed to initialize database: {e}")
+        return "Failed to initialize database.", 500
 
     # JWT - JSON Web Tokens
     try:
         jwt_manager.init_app(app)
     except Exception as e:
-        print(f"Failed to initialize JWT: {e}")
-        return None
+        logging.error(f"Failed to initialize JWT: {e}")
+        return "Failed to initialize JWT.", 500
 
     # Login Manager
     try:
         login_manager.init_app(app)  # TODO wont need this if using JWT
     except Exception as e:
-        print(f"Failed to initialize login manager: {e}")
-        return None
+        logging.error(f"Failed to initialize login manager: {e}")
+        return "Failed to initialize login manager.", 500
 
     # Create database tables and register blueprints and error handlers in app context
     with app.app_context():
@@ -74,8 +74,8 @@ def create_app(*args, **kwargs):
 
             db.create_all()
         except Exception as e:
-            print(f"Failed to create database tables: {e}")
-            return None
+            logging.error(f"Failed to create database tables: {e}")
+            return "Failed to create database tables.", 500
 
         # Register blueprints
         try:
@@ -85,8 +85,8 @@ def create_app(*args, **kwargs):
             app.register_blueprint(api_bp)
             app.register_blueprint(auth_bp)
         except Exception as e:
-            print(f"Failed to register blueprint: {e}")
-            return None
+            logging.error(f"Failed to register blueprint: {e}")
+            return "Failed to register blueprint.", 500
 
         # Register jwt token_in_blocklist_loader
         try:
@@ -97,8 +97,8 @@ def create_app(*args, **kwargs):
                 return TokenBlockList.is_jti_blocklisted(jti)
 
         except Exception as e:
-            print(f"Failed to load jwt token_in_blocklist_loader: {e}")
-            return None
+            logging.error(f"Failed to load jwt token_in_blocklist_loader: {e}")
+            return "Failed to load jwt token_in_blocklist_loader.", 500
 
         # Register error handlers
         # try:
@@ -119,8 +119,8 @@ def create_app(*args, **kwargs):
                 print("Failed to create admin user.")
                 return None
         except Exception as e:
-            print(f"Failed to create admin user: {e}")
-            return None
+            logging.error(f"Failed to create admin user: {e}")
+            return "Failed to create admin user.", 500
 
     return app
 
