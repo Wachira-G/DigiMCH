@@ -1,0 +1,13 @@
+# FILEPATH: /mnt/d/SE/ALX_repos/DigiMCH/.gitignore
+
+# Ignore Python cache files
+__pycache__/
+
+# Ignore virtual environment
+venv/
+
+# visual studio code files
+.vscode
+
+# temporary files such as db
+tmp/
