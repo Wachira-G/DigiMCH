@@ -9,6 +9,7 @@ from api.v1.views import api_bp
 from models.person import Person
 from models.role import Role
 from models.user import User
+from auth.validators import valid_date
 
 
 admin_role = db.session.query(Role).filter_by(name="admin").first()
@@ -108,6 +109,12 @@ def create_user():
                 abort(400, f"Invalid role: {role_name}")
             roles.append(role)
         del data["roles"]
+
+    if "birth_date" in data:
+        if valid_date(data["birth_date"]):
+            pass
+        else:
+            abort(400, f"Invalid date: {data['birth_date']}, date format should be YYYY-MM-DDT00:00:00")
 
     user = User(**data)
     if not user:

@@ -50,3 +50,10 @@ def validate_password(password):
     if not password or not is_valid_password(password):
         return False, error_response("Please provide valid password", 400)
     return True, None
+
+def valid_date(date):
+    """Check if a date is valid.
+    Date must be in the format '%Y-%m-%dT%H:%M:%S'.
+    """
+    pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$"
+    return bool(re.match(pattern, date))
