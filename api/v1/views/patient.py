@@ -7,9 +7,9 @@ from models.person import Person
 from models.role import Role
 from models.user import User
 
-admin_role = Role.query.filter_by(name="admin").first()
-provider_role = Role.query.filter_by(name="provider").first()
-patient_role = Role.query.filter_by(name="patient").first()
+admin_role = db.session.query(Role).filter_by(name="admin").first()
+provider_role = db.session.query(Role).filter_by(name="provider").first()
+patient_role = db.session.query(Role).filter_by(name="patient").first()
 
 
 def token_required(model):

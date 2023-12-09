@@ -161,6 +161,9 @@ class Person(UserMixin, db.Model):
     @staticmethod
     def verify_auth_token(token, model):
         """Verify the auth token."""
+        if not token:
+            print("Token is None")
+            return None
         try:
             if token.startswith("Bearer "):  # strip the bearer prefix
                 token = token[7:]

@@ -1,10 +1,7 @@
 import http
-from flask import Flask
 from flask_testing import TestCase
-from sqlalchemy import inspect
 import unittest
-from app import create_app, db
-from auth.auth import refresh
+from app import create_app
 
 
 class TestAuth(TestCase):
@@ -27,6 +24,12 @@ class TestAuth(TestCase):
         self.assertNotEqual(
             response.json["access_token"], response.json["refresh_token"]
         )
+        response2 = self.client.post(
+            "/api/v1/login", 
+            json={"phone_no": "+254700000001", "password": self.admins_passwd},
+        )
+        self.assertEqual(response2.status_code, 404)
+        self.assertEqual(response2.json["message"], "User not found")
 
     def test_user_logout(self):
         # Assuming you have an endpoint for user logout, e.g., /api/v1/logout

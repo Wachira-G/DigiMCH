@@ -1,18 +1,17 @@
 """Authentication blueprint."""
 
-from flask import jsonify, request, abort
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, decode_token
-from flask_login import login_user, logout_user, login_required, current_user
+from flask import abort, jsonify, request
+from flask_jwt_extended import decode_token, get_jwt, get_jwt_identity, jwt_required
+from api.v1.views.index import status
+
 from auth import auth_bp
-from models import user
-
-from models.person import Person
-from models.user import User
-from models.patient import Patient
-
 from auth.blocklist import TokenBlockList
 from auth.validators import is_valid_kenyan_phone, is_valid_password
+
 from app import db
+from models.patient import Patient
+from models.person import Person
+from models.user import User
 
 
 # api refresh token
@@ -50,6 +49,33 @@ def login():
         )
 
 
+# post login
+@auth_bp.route("/api/v1/login", methods=["POST"], strict_slashes=False)
+def login_post():
+    data = request.get_json()
+
+    valid, phone_no, password = validate_phone_passwd(data)
+    if not valid:
+        error_response = phone_no
+        status_code = password
+        return (
+            error_response,
+            status_code
+        )
+
+    success, user_or_patient_instance = get_user_or_patient(phone_no)
+    if not success:
+        return (
+            user_or_patient_instance # is actually the error response
+        ), 404
+
+    authenticated, response = authenticate_user(user_or_patient_instance, password)
+    if not authenticated:
+        return response  # response is actually the error response
+
+    return response
+
+
 def validate_phone_passwd(data) -> tuple:
     """Validate phone number and password."""
     phone_no = data.get("phone_no")
@@ -73,7 +99,7 @@ def get_user_or_patient(phone_no) -> tuple:
     person = Person.query.filter_by(phone_no=phone_no).first()
 
     if not person:
-        return False, jsonify({"message": "User not found"}), 404
+        return False, jsonify({"message": "User not found"})
 
     user_or_patient_instance = None
 
@@ -103,31 +129,6 @@ def authenticate_user(user_or_patient_instance, password) -> tuple:
         )
     else:
         return False, jsonify({"message": "Invalid credentials"}), 401
-
-
-# post login
-@auth_bp.route("/api/v1/login", methods=["POST"], strict_slashes=False)
-def login_post():
-    data = request.get_json()
-
-    valid, phone_no, password = validate_phone_passwd(data)
-    if not valid:
-        return (
-            phone_no,
-            password,
-        )  # phone_no and password are actually the error response and status code
-
-    success, user_or_patient_instance = get_user_or_patient(phone_no)
-    if not success:
-        return (
-            user_or_patient_instance
-        )  # user_or_patient_instance is actually the error response
-
-    authenticated, response = authenticate_user(user_or_patient_instance, password)
-    if not authenticated:
-        return response  # response is actually the error response
-
-    return response
 
 
 @auth_bp.route("/api/v1/logout", methods=["POST"])
@@ -256,7 +257,7 @@ def change_phone_number():
         return jsonify({"message": "Please provide a valid Kenyan phone number"}), 400
 
     if not password or not is_valid_password(password):
-        return jsonify({"message": "Please provide valid password"}), 400
+        return jsonify({"message": "Please provide valid password."}), 400
 
     person = Person.query.filter_by(phone_no=phone_no).first()
 
