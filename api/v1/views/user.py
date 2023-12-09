@@ -23,11 +23,10 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         # Get the auth token
         token = request.headers.get("Authorization")
-        if token.startswith("Bearer "):  # strip the bearer prefix
-            token = token[7:]
-
         if not token:
             return jsonify({"message": "Token is missing"}), 401
+        if token.startswith("Bearer "):  # strip the bearer prefix
+            token = token[7:]
 
         current_user_id = decode_token(encoded_token=token)["sub"]
 
