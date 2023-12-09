@@ -89,6 +89,10 @@ def create_user():
     if not data:
         abort(400, "Invalid data")
 
+    for field in ["first_name", "surname", "phone_no", "facility_id", "sex", "birth_date", "password"]:
+        if field not in data:
+            abort(400, f"Missing required field: {field}")
+
     roles = []
     if "role" in data:
         role = get_role(data["role"])
