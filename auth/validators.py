@@ -4,6 +4,8 @@
 
 from flask import jsonify
 import re
+from app import db
+from models.location import Location, Tag
 from models.person import Person
 from models.user import User
 from models.patient import Patient
@@ -51,9 +53,73 @@ def validate_password(password):
         return False, error_response("Please provide valid password", 400)
     return True, None
 
+
 def valid_date(date):
     """Check if a date is valid.
     Date must be in the format '%Y-%m-%dT%H:%M:%S'.
     """
     pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$"
     return bool(re.match(pattern, date))
+
+
+# -------------- Location related validators -----------------
+def valid_location(data):
+    """Check if a location is valid.
+    Location must have a name and a tag.
+    """
+    if not data.get("name") or not data.get("tag"):
+        return False
+    return True
+
+
+TAGS_HIERARCHY = [
+    "country",
+    "region",
+    "county",
+    "subcounty",
+    "ward",
+    "location",
+    "sublocation",
+    "neighbourhood",
+    "village",
+    "estate",
+    "street",
+    "building",
+    "room",
+]
+
+# NOTE have to create all the tags first before the location
+
+
+def valid_tag(tag):
+    """Check if a tag is valid."""
+    return bool(db.session.query(Tag).filter_by(name=tag).first())
+
+
+def valid_tag_hierarchy(parent_tag, current_tag):
+    try:
+        parent_index = TAGS_HIERARCHY.index(parent_tag)
+        current_index = TAGS_HIERARCHY.index(current_tag)
+    except ValueError:
+        return False  # One of the tags is not in the hierarchy
+
+    return (
+        current_index > parent_index
+    )  # The current tag should be lower in the hierarchy
+
+
+def location_exists(name, parent=None):
+    """Check if a location exists."""
+    locations = db.session.query(Location).filter_by(name=name).all()
+    if not locations:
+        return False
+
+    if locations and parent:
+        for location in locations:
+            if location.parent_id == parent.id:
+                return True
+        return False
+    # should i return true here (scenario?)
+
+
+# -------------- End Location related validators -----------------

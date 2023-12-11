@@ -70,6 +70,7 @@ def create_app(*args, **kwargs):
             from models.visit import Visit
             from models.encounter import Encounter
             from models.appointment import Appointment
+            from models.location import Tag, Location
 
             db.create_all()
         except Exception as e:
@@ -119,6 +120,13 @@ def create_app(*args, **kwargs):
                 raise Exception("Failed to create admin user.")
         except Exception as e:
             logging.error(f"Failed to create admin user: {e}")
+            raise
+
+        try:
+            from create_tags import create_tags
+            create_tags()
+        except Exception as e:
+            logging.error(f'Failed to create tags: {e}')
             raise
 
     return app
