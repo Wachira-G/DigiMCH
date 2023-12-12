@@ -1,4 +1,8 @@
+"""Patient views."""
+
+
 from flask import jsonify, request, abort
+from flask_jwt_extended import jwt_required, decode_token
 from functools import wraps
 from app import db
 from api.v1.views import api_bp
@@ -6,40 +10,12 @@ from models.patient import Patient
 from models.person import Person
 from models.role import Role
 from models.user import User
+from auth.validators import valid_date
+
 
 admin_role = db.session.query(Role).filter_by(name="admin").first()
 provider_role = db.session.query(Role).filter_by(name="provider").first()
 patient_role = db.session.query(Role).filter_by(name="patient").first()
-
-
-def token_required(model):
-    """Decorator to check if a user is logged in."""
-
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # Get the auth token
-            token = request.headers.get("Authorization")
-            if not token:
-                return jsonify({"message": "Token is missing"}), 401
-
-            # Get the current user
-            current_user = Person.verify_auth_token(token, model)
-            if current_user is None:
-                return (
-                    jsonify(
-                        {
-                            "message": "Authentication is required to access this resource"
-                        }
-                    ),
-                    401,
-                )
-
-            return f(current_user, *args, **kwargs)
-
-        return decorated_function
-
-    return decorator
 
 
 def role_required(*required_roles):
@@ -47,7 +23,33 @@ def role_required(*required_roles):
 
     def decorator(f):
         @wraps(f)
-        def decorated_function(current_user, *args, **kwargs):
+        def decorated_function(*args, **kwargs):
+        # Get the auth token
+            token = request.headers.get("Authorization")
+            if not token:
+                return jsonify({"message": "Token is missing"}), 401
+            if token.startswith("Bearer "):  # strip the bearer prefix
+                token = token[7:]
+
+            current_user_id = decode_token(encoded_token=token)["sub"]
+
+            # Get the current user
+            if current_user_id is None:
+                return (
+                    jsonify(
+                        {"message": "Authentication is required to access this resource"}
+                    ),
+                    401,
+                )
+            current_user = db.session.get(Person, current_user_id)
+            if current_user is None:
+                return (
+                    jsonify(
+                        {"message": "Authentication is required to access this resource"}
+                    ),
+                    401,
+                )
+
             # Check if the current user has any of the required roles
             if not any(
                 role in (role.name for role in current_user.roles)
@@ -62,7 +64,7 @@ def role_required(*required_roles):
                     403,
                 )
 
-            return f(current_user, *args, **kwargs)
+            return f(*args, **kwargs)
 
         return decorated_function
 
@@ -87,9 +89,9 @@ admin_or_provider_required = role_required("admin", "provider")
 # endpoint to get all patients
 # requres admin or provider role
 @api_bp.route("/patients", methods=["GET"], strict_slashes=False)
-@token_required(User)
 @admin_or_provider_required
-def get_patients(current_user):
+@jwt_required()
+def get_patients():
     """Return all patients."""
     patients = db.session.query(Patient).all()
     return jsonify([patient.to_dict() for patient in patients]), 200
@@ -99,9 +101,9 @@ def get_patients(current_user):
 # requres admin or provider role
 # or patient if logged in user is patient and id matches logged in user's id TODO
 @api_bp.route("/patients/<string:patient_id>", methods=["GET"], strict_slashes=False)
-@token_required(User)
 @admin_or_provider_required
-def get_patient(current_user, patient_id):
+@jwt_required()
+def get_patient(patient_id):
     """Return a single patient."""
     patient = db.session.query(Patient).get(patient_id)
     if not patient:
@@ -112,10 +114,11 @@ def get_patient(current_user, patient_id):
 # endpoint to get a single patient by phone_no
 # requres admin or provider role
 # or patient if logged in user is patient and phone_no matches logged in user's phone_no
-@api_bp.route("/patients/<string:phone_no>", methods=["GET"], strict_slashes=False)
-@token_required(User)
+@api_bp.route("/patients/phone/<string:phone_no>", methods=["GET"], strict_slashes=False)
+@api_bp.route("/patients/phone_no/<string:phone_no>", methods=["GET"], strict_slashes=False)
 @admin_or_provider_required
-def get_patient_by_phone_no(current_user, phone_no):
+@jwt_required()
+def get_patient_by_phone_no(phone_no):
     """Return a single patient."""
     patient = db.session.query(Patient).filter_by(phone_no=phone_no).first()
     if not patient:
@@ -123,30 +126,87 @@ def get_patient_by_phone_no(current_user, phone_no):
     return jsonify(patient.to_dict()), 200
 
 
-# THIS ENDPOINT DOES NOT MAKE SENSE
-# endpoint to get a single patient by phone_no by patient if logged in user is patient and phone_no matches logged in user's phone_no
+# get patient's info(self) for the currnet logged in patient
 @api_bp.route("/patients/me", methods=["GET"], strict_slashes=False)
-@token_required(Patient)
 @patient_required
-def get_patient_self(current_user):
+@jwt_required()
+def get_patient_self():
     """Return a single patient."""
-    patient = (
-        db.session.query(Patient).filter_by(phone_no=current_user.phone_no).first()
-    )
+    token = request.headers.get("Authorization")
+    patient = None
+    if token:
+        if token.startswith("Bearer "):
+            token = token[7:]
+        current_user_id = decode_token(encoded_token=token)["sub"]
+        patient = db.session.query(Patient).filter_by(id=current_user_id).first()
+
+    # patient = (
+    #     db.session.query(Patient).filter_by(phone_no=current_user.phone_no).first()
+    # )
     if not patient:
         abort(404)
     return jsonify(patient.to_dict()), 200
 
 
+def get_role(name):
+    """Return a role by name - helper function."""
+    if name:
+        name = name.lower()
+    role = db.session.query(Role).filter_by(name=name).first()
+    return role
+
 # endpoint to create a patient
 # requres admin or provider role
 @api_bp.route("/patients", methods=["POST"], strict_slashes=False)
-@token_required(User)
 @admin_or_provider_required
-def create_patient(current_user):
+@jwt_required()
+def create_patient():
     """Create a patient."""
     data = request.get_json()
+    if not data:
+        abort(400, "Invalid data")
+
+    for field in ["first_name", "surname", "phone_no", "sex", "birth_date", "password"]:
+        if field not in data:
+            abort(400, f"Missing required field: {field}")
+
+    phone_no_exists = db.session.query(Person).filter_by(phone_no=data["phone_no"]).first()
+    if phone_no_exists:
+        abort(400, f"A user with Phone number already exists: {data['phone_no']}")
+
+    roles = []
+    if "role" in data:
+        role = get_role(data["role"])
+        if not role:
+            abort(400, f'Invalid role: {data["role"]}')
+        roles.append(role)
+        del data["role"]
+
+    if "roles" in data:
+        for role_name in data["roles"]:
+            role = get_role(role_name)
+            if not role:
+                abort(400, f"Invalid role: {role_name}")
+            roles.append(role)
+        del data["roles"]
+
+    roles = list(set(roles))  # remove duplicates
+
+    if "birth_date" in data:
+        if valid_date(data["birth_date"]):
+            pass
+        else:
+            abort(
+                400,
+                f"Invalid date: {data['birth_date']}, date format should be YYYY-MM-DDT00:00:00"
+            )
+
+
     patient = Patient(**data)
+    if not patient:
+        abort(400, "Failed to create patient")
+
+    patient.roles.extend(roles)
     db.session.add(patient)
     db.session.commit()
     return jsonify(patient.to_dict()), 201
@@ -155,9 +215,9 @@ def create_patient(current_user):
 # endpoint to update a patient
 # requres admin or provider role
 @api_bp.route("/patients/<string:patient_id>", methods=["PUT"], strict_slashes=False)
-@token_required(User)
 @admin_or_provider_required
-def update_patient(current_user, patient_id):
+@jwt_required()
+def update_patient(patient_id):
     """Update a patient."""
     patient = db.session.query(Patient).get(patient_id)
     if not patient:
@@ -166,7 +226,7 @@ def update_patient(current_user, patient_id):
     if not data:
         abort(400)
     for key, value in data.items():
-        if key in ["first_name", "surname", "middle_name", "phone_no", "email"]:
+        if key in ["first_name", "surname", "middle_name", "phone_no"]: # TODO add more fields
             setattr(patient, key, value)
     db.session.commit()
     return jsonify(patient.to_dict()), 200
@@ -179,9 +239,9 @@ def update_patient(current_user, patient_id):
 # endpoint to delete a patient
 # requres admin or provider role
 @api_bp.route("/patients/<string:patient_id>", methods=["DELETE"], strict_slashes=False)
-@token_required(User)
 @admin_or_provider_required
-def delete_patient(current_user, patient_id):
+@jwt_required()
+def delete_patient(patient_id):
     """Delete a patient."""
     patient = db.session.query(Patient).get(patient_id)
     if not patient:

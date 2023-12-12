@@ -71,6 +71,7 @@ def create_app(*args, **kwargs):
             from models.encounter import Encounter
             from models.appointment import Appointment
             from models.location import Tag, Location
+            from models.pregnancy_history import PregnancyHistory
 
             db.create_all()
         except Exception as e:

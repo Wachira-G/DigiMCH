@@ -9,6 +9,7 @@ from flask_jwt_extended import (
 )
 from flask_login import UserMixin  # TODO will remove this
 from itsdangerous import BadSignature, SignatureExpired, TimedSerializer as Serializer
+import logging
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import func
@@ -196,18 +197,20 @@ class Person(UserMixin, db.Model):
     def get_role(self, role_name):
         """Get a role."""
         role = None
-        if role_name is None or "":
+        if role_name is None or role_name == "":
             return None
         try:
             role = Role.query.filter_by(name=role_name).first()
         except Exception as e:
-            print(f"Failed to get role: {e}")
+            logging.error(f"Failed to get role: {e}")
             return None
         finally:
             return role
 
     def assign_role(self, role):
         """Assign a role to a person."""
+        if role is None:
+            return
         if role not in self.roles:
             self.roles.append(role)
             storage.session.add(self)

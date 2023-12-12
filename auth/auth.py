@@ -22,7 +22,7 @@ def refresh():
     current_user_id = get_jwt_identity()
     new_token = None
     if current_user_id:
-        new_token = db.session.get(User, current_user_id).generate_access_token()
+        new_token = db.session.get(Person, current_user_id).generate_access_token()
     return jsonify(access_token=new_token), 200
 
 
@@ -71,9 +71,9 @@ def login_post():
 
     authenticated, response = authenticate_user(user_or_patient_instance, password)
     if not authenticated:
-        return response  # response is actually the error response
+        return response, 401  # response is actually the error response
 
-    return response
+    return response, 200
 
 
 def validate_phone_passwd(data) -> tuple:
@@ -125,10 +125,10 @@ def authenticate_user(user_or_patient_instance, password) -> tuple:
                     "access_token": access_token,
                     "refresh_token": refresh_token,
                 }
-            ),
+            ) #, 200
         )
     else:
-        return False, jsonify({"message": "Invalid credentials"}), 401
+        return False, jsonify({"message": "Invalid credentials"}) #, 401
 
 
 @auth_bp.route("/api/v1/logout", methods=["POST"])

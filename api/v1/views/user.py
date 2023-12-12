@@ -1,6 +1,6 @@
 """User related endpoints."""
 
-from flask import jsonify, request, abort, current_app
+from flask import jsonify, request, abort
 from functools import wraps
 
 from flask_jwt_extended import get_jwt_identity, jwt_required, decode_token
@@ -93,6 +93,10 @@ def create_user():
     for field in ["first_name", "surname", "phone_no", "facility_id", "sex", "birth_date", "password"]:
         if field not in data:
             abort(400, f"Missing required field: {field}")
+
+    phone_no_exists = db.session.query(Person).filter_by(phone_no=data["phone_no"]).first()
+    if phone_no_exists:
+        abort(400, f"A user with Phone number already exists: {data['phone_no']}")
 
     roles = []
     if "role" in data:

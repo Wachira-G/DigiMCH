@@ -16,7 +16,6 @@ class Patient(Person):
     sys_gen_uniq_no = db.Column(db.String(128), nullable=True)
     alt_phone_no = db.Column(db.String(128), nullable=True)
     marital_status = db.Column(db.String(128), nullable=True)
-    telephone = db.Column(db.String(128), nullable=True)
     education_level = db.Column(db.String(128), nullable=True)
     next_of_kin = db.Column(db.String(128), nullable=True)
     next_of_kin_relationship = db.Column(db.String(128), nullable=True)
@@ -30,7 +29,6 @@ class Patient(Person):
             "sys_gen_uniq_no": self.sys_gen_uniq_no,
             "alt_phone_no": self.alt_phone_no,
             "marital_status": self.marital_status,
-            "telephone": self.telephone,
             "education_level": self.education_level,
             "next_of_kin": self.next_of_kin,
             "next_of_kin_relationship": self.next_of_kin_relationship,

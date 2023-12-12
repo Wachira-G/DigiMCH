@@ -11,3 +11,4 @@ from api.v1.views.role import *
 from api.v1.views.appointment import *
 from api.v1.views.visit import *
 from api.v1.views.encounter import *
+from api.v1.views.pregnancy_history import *

@@ -1,5 +1,6 @@
 """Module for Role model."""
 
+from marshmallow import Schema, fields
 from app import db
 
 person_role = db.Table(
@@ -7,6 +8,13 @@ person_role = db.Table(
     db.Column("person_id", db.Integer, db.ForeignKey("persons.id")),
     db.Column("role_id", db.Integer, db.ForeignKey("roles.id")),
 )
+
+class RoleSchema(Schema):
+    """Schema for the Role model."""
+
+    id = fields.Int(dump_only=True)
+    name = fields.Str()
+    role_description = fields.Str()
 
 
 class Role(db.Model):

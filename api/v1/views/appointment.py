@@ -8,7 +8,7 @@ from api.v1.views.user import admin_required
 from api.v1.views.patient import (
     admin_or_provider_required,
     patient_required,
-    token_required,
+    #token_required,
 )
 from models.appointment import Appointment
 from models.user import User
@@ -18,7 +18,7 @@ time = "%Y-%m-%dT%H:%M:%S"
 
 
 @api_bp.route("/appointments", methods=["GET"], strict_slashes=False)
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def get_all_appointments(current_user):
     """Get all appointments"""
@@ -28,7 +28,7 @@ def get_all_appointments(current_user):
 
 # create an appointment
 @api_bp.route("/appointments", methods=["POST"], strict_slashes=False)
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def create_appointment(current_user):
     """Create an appointment"""
@@ -43,7 +43,7 @@ def create_appointment(current_user):
 @api_bp.route(
     "/appointments/<int:appointment_id>", methods=["PUT"], strict_slashes=False
 )
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def update_appointment(current_user, appointment_id):
     """Update an appointment"""
@@ -70,7 +70,7 @@ def update_appointment(current_user, appointment_id):
 @api_bp.route(
     "/appointments/<int:appointment_id>", methods=["DELETE"], strict_slashes=False
 )
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def delete_appointment(current_user, appointment_id):
     """Delete an appointment"""
@@ -86,7 +86,7 @@ def delete_appointment(current_user, appointment_id):
 @api_bp.route(
     "/appointments/patient/<int:patient_id>", methods=["GET"], strict_slashes=False
 )
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def get_patient_appointments(current_user, patient_id):
     """Get all appointments for a patient"""
@@ -96,7 +96,7 @@ def get_patient_appointments(current_user, patient_id):
 
 # get all appointments for a patient (self)
 @api_bp.route("/appointments/patient/me", methods=["GET"], strict_slashes=False)
-@token_required(Patient)
+#@token_required(Patient)
 @patient_required
 def get_patient_self_appointments(current_user):
     """Get all appointments for a patient"""
@@ -110,7 +110,7 @@ def get_patient_self_appointments(current_user):
 
 # get all appointments for a user
 @api_bp.route("/appointments/user/<int:user_id>", methods=["GET"], strict_slashes=False)
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def get_user_appointments(current_user, user_id):
     """Get all appointments for a user"""
@@ -120,7 +120,7 @@ def get_user_appointments(current_user, user_id):
 
 # get all appointments for a user (self)
 @api_bp.route("/appointments/user/me", methods=["GET"], strict_slashes=False)
-@token_required(User)
+#@token_required(User)
 @admin_or_provider_required
 def get_user_self_appointments(current_user):
     """Get all appointments for a user"""
