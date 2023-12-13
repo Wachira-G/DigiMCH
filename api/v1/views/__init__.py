@@ -13,3 +13,4 @@ from api.v1.views.visit import *
 from api.v1.views.encounter import *
 from api.v1.views.pregnancy_history import *
 from api.v1.views.medical_history import *
+from api.v1.views.first_visit_examination import *

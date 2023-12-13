@@ -111,11 +111,11 @@ def update_medical_history(patient_id):
     """Update a patient's medical history."""
     schema = MedicalHistorySchema()
     try:
-        data = schema.load(request.get_json())
+        data = schema.load(request.get_json(), partial=True)
     except ValidationError as err:
-        return jsonify({"message": "Invalid input data", "errors": err.messages}), 400
+        return jsonify({"message": "Invalid input data", "erors": err.messages}), 400
 
-    patient = db.session.query(Patient).get(patient_id)
+    patient = db.session.query(Patient).get(patient_id),
     if not patient:
         return jsonify({"message": "Patient not found"}), 404
 
