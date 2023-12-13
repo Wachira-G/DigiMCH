@@ -18,6 +18,7 @@ login_manager = LoginManager()  # TODO wont need this if using JWT
 def load_user(user_id):
     """Load a user."""
     from models.user import User
+
     return User.query.get(user_id)
 
 
@@ -72,6 +73,7 @@ def create_app(*args, **kwargs):
             from models.appointment import Appointment
             from models.location import Tag, Location
             from models.pregnancy_history import PregnancyHistory
+            from models.medical_history import MedicalHistory
 
             db.create_all()
         except Exception as e:
@@ -125,9 +127,10 @@ def create_app(*args, **kwargs):
 
         try:
             from create_tags import create_tags
+
             create_tags()
         except Exception as e:
-            logging.error(f'Failed to create tags: {e}')
+            logging.error(f"Failed to create tags: {e}")
             raise
 
     return app
