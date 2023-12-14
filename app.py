@@ -75,6 +75,10 @@ def create_app(*args, **kwargs):
             from models.pregnancy_history import PregnancyHistory
             from models.medical_history import MedicalHistory
             from models.first_visit_examination import PhysicalExaminationFirstVisit
+            from models.present_pregnancy import PresentPregnancy
+            from models.antenatal_profile import AntenatalProfile
+            from models.maternal_profile import MaternalProfile
+            from models.clinical_note import ClinicalNote
 
             db.create_all()
         except Exception as e:
